@@ -114,14 +114,17 @@ export async function POST(req: NextRequest) {
       ]);
 
       // Dispatch FCM Push Notification to mobile devices
-      sendFcmBroadcast({
+      const fcmResult = await sendFcmBroadcast({
         headline: headline.trim(),
         severity: safeSeverity,
         targetType: target_type === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
         targetRegions: target_regions,
-      }).catch((err) => console.error('[FCM] Error dispatching push:', err));
+      }).catch((err) => {
+        console.error('[FCM] Error dispatching push:', err);
+        return { success: false, error: err?.message };
+      });
 
-      return NextResponse.json({ success: true, data: result.rows[0] });
+      return NextResponse.json({ success: true, data: result.rows[0], fcm: fcmResult });
     } catch (pgError: any) {
       console.warn('Postgres pool query failed in POST /api/broadcast, falling back to Supabase REST:', pgError?.message);
       const supabase = await createClient();
@@ -147,14 +150,17 @@ export async function POST(req: NextRequest) {
       if (error) throw error;
 
       // Dispatch FCM Push Notification on fallback path
-      sendFcmBroadcast({
+      const fcmResult = await sendFcmBroadcast({
         headline: headline.trim(),
         severity: safeSeverity,
         targetType: target_type === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
         targetRegions: target_regions,
-      }).catch((err) => console.error('[FCM] Error dispatching push:', err));
+      }).catch((err) => {
+        console.error('[FCM] Error dispatching push:', err);
+        return { success: false, error: err?.message };
+      });
 
-      return NextResponse.json({ success: true, data });
+      return NextResponse.json({ success: true, data, fcm: fcmResult });
     }
   } catch (error: any) {
     console.error('Failed to broadcast disaster alert:', error);
