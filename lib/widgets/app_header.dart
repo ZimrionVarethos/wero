@@ -52,7 +52,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   icon: Icon(
                     activeAlert != null
                         ? Icons.notifications_active_rounded
-                        : Icons.notifications_outlined,
+                        : Icons.notifications_rounded,
                     size: 24,
                   ),
                   color: activeAlert != null

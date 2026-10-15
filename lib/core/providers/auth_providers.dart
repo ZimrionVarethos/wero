@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/region.dart';
 import '../../models/user_profile.dart';
 import '../../services/auth_service.dart';
+import '../../services/fcm_notification_service.dart';
 import 'supabase_providers.dart';
 
 /// Provider exposing the [AuthService] instance.
@@ -24,7 +27,13 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     final service = ref.watch(authServiceProvider);
     // React to auth state changes.
     ref.watch(authStateChangesProvider);
-    return service.fetchProfile();
+    final profile = await service.fetchProfile();
+    if (profile?.regionName != null) {
+      unawaited(
+        FcmNotificationService.instance.syncRegionTopic(profile!.regionName),
+      );
+    }
+    return profile;
   }
 
   /// Update display name and/or region.
@@ -32,10 +41,16 @@ class UserProfileNotifier extends AsyncNotifier<UserProfile?> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final service = ref.read(authServiceProvider);
-      return service.updateProfile(
+      final updated = await service.updateProfile(
         displayName: displayName,
         regionId: regionId,
       );
+      if (updated.regionName != null) {
+        unawaited(
+          FcmNotificationService.instance.syncRegionTopic(updated.regionName),
+        );
+      }
+      return updated;
     });
   }
 

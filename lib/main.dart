@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/config/app_config.dart';
+import 'services/fcm_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,9 @@ Future<void> main() async {
 
   // Fetch dynamic public config (e.g. Mapbox token) from web backend
   unawaited(AppConfig.loadDynamicConfig());
+
+  // Initialize Firebase Cloud Messaging for background push notifications
+  unawaited(FcmNotificationService.instance.initialize());
 
   runApp(const ProviderScope(child: WeroApp()));
 }

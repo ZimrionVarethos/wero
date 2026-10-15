@@ -98,9 +98,12 @@ class PostCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.xs),
                 ],
-                Text(
-                  _formatDate(post.createdAt),
-                  style: AppTextStyles.caption.copyWith(fontSize: 11),
+                Flexible(
+                  child: Text(
+                    _formatDate(post.createdAt),
+                    style: AppTextStyles.caption.copyWith(fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
