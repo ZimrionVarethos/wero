@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,6 +21,9 @@ Future<void> main() async {
       // In offline/prototype development, allow app to continue gracefully.
     }
   }
+
+  // Fetch dynamic public config (e.g. Mapbox token) from web backend
+  unawaited(AppConfig.loadDynamicConfig());
 
   runApp(const ProviderScope(child: WeroApp()));
 }

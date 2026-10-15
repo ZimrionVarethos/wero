@@ -48,6 +48,13 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
     super.initState();
     _mapController = MapController();
     _currentLocation = widget.userLocation;
+    if (!AppConfig.isMapboxConfigured) {
+      AppConfig.loadDynamicConfig().then((_) {
+        if (mounted && AppConfig.isMapboxConfigured) {
+          setState(() {});
+        }
+      });
+    }
   }
 
   @override

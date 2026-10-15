@@ -1,0 +1,46 @@
+name: Build iOS Runner & Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'web/**'
+
+jobs:
+  build-ios:
+    name: Build iOS Bundle on macOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Analysis & Tests
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Build iOS Application (Release, unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package Payload (Runner.app)
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r Siagaku-iOS-unsigned.ipa Payload
+
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Siagaku-iOS-unsigned
+          path: Siagaku-iOS-unsigned.ipa
