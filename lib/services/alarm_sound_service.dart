@@ -9,6 +9,9 @@ class AlarmSoundService {
     _player.setReleaseMode(ReleaseMode.loop);
   }
 
+  static const MethodChannel _vibrationChannel =
+      MethodChannel('com.siagaku.wero/vibration');
+
   final AudioPlayer _player;
   Timer? _hapticTimer;
   bool _isPlaying = false;
@@ -23,7 +26,12 @@ class AlarmSoundService {
     if (_isPlaying) return;
     _isPlaying = true;
 
-    // Start rhythmic haptic vibration
+    // Trigger powerful Android hardware vibrator
+    try {
+      unawaited(_vibrationChannel.invokeMethod('vibrateEmergency'));
+    } catch (_) {}
+
+    // Start rhythmic haptic vibration fallback
     _triggerHaptic();
     _hapticTimer?.cancel();
     _hapticTimer = Timer.periodic(const Duration(milliseconds: 600), (_) {
@@ -51,6 +59,9 @@ class AlarmSoundService {
     _isPlaying = false;
     _hapticTimer?.cancel();
     _hapticTimer = null;
+    try {
+      unawaited(_vibrationChannel.invokeMethod('stopVibration'));
+    } catch (_) {}
     try {
       await _player.stop();
     } catch (_) {}

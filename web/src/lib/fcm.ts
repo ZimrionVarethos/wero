@@ -129,9 +129,10 @@ export async function sendFcmBroadcast({
           android: {
             priority: 'high',
             notification: {
-              channelId: 'emergency_alerts',
+              channelId: 'emergency_alerts_v2',
               sound: 'default',
-              defaultVibrateTimings: true,
+              defaultVibrateTimings: false,
+              vibrateTimingsMillis: [0, 1000, 400, 1000, 400, 1500],
               priority: 'high',
             },
           },

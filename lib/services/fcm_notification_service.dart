@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'alarm_sound_service.dart';
 
 /// Top-level background message handler executed by the OS when app is closed.
 @pragma('vm:entry-point')
@@ -77,6 +78,13 @@ class FcmNotificationService {
       try {
         await messaging.subscribeToTopic('nasional');
       } catch (_) {}
+
+      // Listen to foreground FCM messages and trigger alarm siren + vibration
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        try {
+          AlarmSoundService().startEmergencyAlarm();
+        } catch (_) {}
+      });
     } catch (e) {
       if (kDebugMode) {
         // ignore: avoid_print
