@@ -228,7 +228,7 @@ class _BmkgPlaytestDialogState extends ConsumerState<BmkgPlaytestDialog> {
           child: OutlinedButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              context.go(AppRoutes.activity);
+              context.push(AppRoutes.evacuation);
             },
             icon: const Icon(Icons.near_me_outlined, size: 18),
             label: const Text('Buka Peta Jalur Evakuasi'),

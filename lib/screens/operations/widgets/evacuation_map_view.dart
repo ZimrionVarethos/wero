@@ -125,8 +125,14 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
           children: [
             TileLayer(
               urlTemplate: mapboxUrl,
-              fallbackUrl: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.siagaku.wero',
+              tileProvider: NetworkTileProvider(
+                cachingProvider: BuiltInMapCachingProvider.getOrCreateInstance(
+                  maxCacheSize: 1024 * 1024 * 1024,
+                  overrideFreshAge: const Duration(days: 180),
+                ),
+                silenceExceptions: true,
+              ),
             ),
             if (routePoints.isNotEmpty)
               PolylineLayer(

@@ -187,7 +187,7 @@ class EmergencyAlertOverlay extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () {
                         onDismiss();
-                        context.go(AppRoutes.activity);
+                        context.push(AppRoutes.evacuation);
                       },
                       icon: const Icon(Icons.near_me_outlined, size: 18),
                       label: const Text('Buka Peta Jalur Evakuasi'),

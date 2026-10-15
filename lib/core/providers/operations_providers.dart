@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/disaster_event.dart';
 import '../../models/evacuation_point.dart';
 import '../../models/sos_event.dart';
+import '../../services/evacuation_cache_service.dart';
 import '../../services/operations_service.dart';
 import 'supabase_providers.dart';
 
@@ -94,6 +95,11 @@ class EvacuationQuery {
   int get hashCode => Object.hash(kind, searchQuery);
 }
 
+/// Cache service provider for offline evacuation facilities.
+final evacuationCacheServiceProvider = Provider<EvacuationCacheService>((ref) {
+  return const EvacuationCacheService();
+});
+
 /// Provider fetching evacuation facilities based on kind and search query.
 final evacuationPointsProvider =
     FutureProvider.family<List<EvacuationPoint>, EvacuationQuery>((
@@ -101,7 +107,22 @@ final evacuationPointsProvider =
       query,
     ) async {
       final service = ref.watch(operationsServiceProvider);
-      return service.fetchEvacuationPoints(
+      final cacheService = ref.watch(evacuationCacheServiceProvider);
+
+      try {
+        final onlinePoints = await service.fetchEvacuationPoints(
+          kind: query.kind,
+          searchQuery: query.searchQuery,
+        );
+        if (onlinePoints.isNotEmpty) {
+          if (query.kind == null && query.searchQuery.isEmpty) {
+            await cacheService.cachePoints(onlinePoints);
+          }
+          return onlinePoints;
+        }
+      } catch (_) {}
+
+      return cacheService.getCachedPoints(
         kind: query.kind,
         searchQuery: query.searchQuery,
       );
