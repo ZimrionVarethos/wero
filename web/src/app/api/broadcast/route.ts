@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
+import { sendFcmBroadcast } from '@/lib/fcm';
 
 function normalizeSeverity(val: string): 'AWAS' | 'SIAGA' | 'WASPADA' | 'INFO' {
   const upper = (val || '').toUpperCase().trim();
@@ -112,6 +113,14 @@ export async function POST(req: NextRequest) {
         JSON.stringify(sourcePayloadObj),
       ]);
 
+      // Dispatch FCM Push Notification to mobile devices
+      sendFcmBroadcast({
+        headline: headline.trim(),
+        severity: safeSeverity,
+        targetType: target_type === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
+        targetRegions: target_regions,
+      }).catch((err) => console.error('[FCM] Error dispatching push:', err));
+
       return NextResponse.json({ success: true, data: result.rows[0] });
     } catch (pgError: any) {
       console.warn('Postgres pool query failed in POST /api/broadcast, falling back to Supabase REST:', pgError?.message);
@@ -136,6 +145,15 @@ export async function POST(req: NextRequest) {
         .single();
 
       if (error) throw error;
+
+      // Dispatch FCM Push Notification on fallback path
+      sendFcmBroadcast({
+        headline: headline.trim(),
+        severity: safeSeverity,
+        targetType: target_type === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
+        targetRegions: target_regions,
+      }).catch((err) => console.error('[FCM] Error dispatching push:', err));
+
       return NextResponse.json({ success: true, data });
     }
   } catch (error: any) {
