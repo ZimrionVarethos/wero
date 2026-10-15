@@ -171,11 +171,21 @@ export default function BroadcastManager() {
           targetType === 'ALL'
             ? 'seluruh daerah (Nasional)'
             : `${selectedRegionNames.length} daerah terpilih`;
+
+        let fcmNote = '';
+        if (json.fcm) {
+          if (json.fcm.success && json.fcm.dispatched > 0) {
+            fcmNote = ` • 📲 Push FCM (${json.fcm.method}) terkirim!`;
+          } else if (json.fcm.reason) {
+            fcmNote = ` • ⚠️ Push FCM dilewati (${json.fcm.reason})`;
+          }
+        }
+
         setToast({
-          message: `Peringatan darurat berhasil disiarkan ke ${targetDesc}`,
+          message: `Peringatan darurat berhasil disiarkan ke ${targetDesc}${fcmNote}`,
           isError: false,
         });
-        setTimeout(() => setToast(null), 5000);
+        setTimeout(() => setToast(null), 6000);
         setFormData({
           headline: '',
           disaster_type: 'EARTHQUAKE',

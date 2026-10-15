@@ -8,20 +8,33 @@ function getFirebaseAdminApp(): App | null {
   }
 
   let serviceAccount: any = null;
-  const rawSa = process.env.FIREBASE_SERVICE_ACCOUNT;
+  let rawSa = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_CONFIG;
+  if (!rawSa && process.env.FCM_SERVER_KEY) {
+    const candidate = process.env.FCM_SERVER_KEY.trim();
+    if (candidate.startsWith('{') || candidate.startsWith('eyJ') || candidate.includes('private_key')) {
+      rawSa = candidate;
+    }
+  }
 
   if (rawSa && rawSa.trim().length > 0) {
     try {
-      const trimmed = rawSa.trim();
+      let trimmed = rawSa.trim();
+      if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+        trimmed = trimmed.slice(1, -1);
+      }
       if (trimmed.startsWith('{')) {
         serviceAccount = JSON.parse(trimmed);
       } else {
         // Attempt base64 decode
-        const decoded = Buffer.from(trimmed, 'base64').toString('utf8');
-        serviceAccount = JSON.parse(decoded);
+        try {
+          const decoded = Buffer.from(trimmed, 'base64').toString('utf8');
+          if (decoded.trim().startsWith('{')) {
+            serviceAccount = JSON.parse(decoded);
+          }
+        } catch (_) {}
       }
     } catch (e: any) {
-      console.error('[FCM] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', e?.message);
+      console.error('[FCM] Failed to parse Service Account JSON:', e?.message);
     }
   } else if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
     serviceAccount = {
@@ -31,21 +44,26 @@ function getFirebaseAdminApp(): App | null {
     };
   }
 
-  if (serviceAccount && serviceAccount.client_email && (serviceAccount.private_key || serviceAccount.privateKey)) {
-    try {
-      if (getApps().length > 0) {
-        return getApps()[0]!;
-      }
-      return initializeApp({
-        credential: cert({
+  if (serviceAccount && (serviceAccount.client_email || serviceAccount.clientEmail)) {
+    const rawKey = serviceAccount.private_key || serviceAccount.privateKey || '';
+    const cleanKey = typeof rawKey === 'string' ? rawKey.replace(/\\n/g, '\n') : '';
+
+    if (cleanKey.includes('BEGIN PRIVATE KEY')) {
+      try {
+        if (getApps().length > 0) {
+          return getApps()[0]!;
+        }
+        return initializeApp({
+          credential: cert({
+            projectId: serviceAccount.project_id || serviceAccount.projectId || 'wero-emergency',
+            clientEmail: serviceAccount.client_email || serviceAccount.clientEmail,
+            privateKey: cleanKey,
+          }),
           projectId: serviceAccount.project_id || serviceAccount.projectId || 'wero-emergency',
-          clientEmail: serviceAccount.client_email || serviceAccount.clientEmail,
-          privateKey: (serviceAccount.private_key || serviceAccount.privateKey || '').replace(/\\n/g, '\n'),
-        }),
-        projectId: serviceAccount.project_id || serviceAccount.projectId || 'wero-emergency',
-      });
-    } catch (err: any) {
-      console.error('[FCM] Failed to initialize Firebase Admin app:', err?.message);
+        });
+      } catch (err: any) {
+        console.error('[FCM] Failed to initialize Firebase Admin app:', err?.message);
+      }
     }
   }
 

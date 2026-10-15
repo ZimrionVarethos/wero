@@ -48,11 +48,15 @@ class FcmNotificationService {
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional) {
-        // Listen to registration events
+        // Listen to registration events (modern replacement in firebase_messaging v17)
         messaging.onRegistered.listen((token) async {
           _cachedToken = token;
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_prefKeyFcmToken, token);
+          if (kDebugMode) {
+            // ignore: avoid_print
+            print('[FCM] Device token registered: $token');
+          }
         });
 
         // Register the app instance with Firebase Cloud Messaging
