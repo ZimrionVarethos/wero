@@ -200,7 +200,7 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
             children: [
               Text(widget.post.authorName, style: AppTextStyles.label),
               Text(
-                '${widget.post.createdAt.day}/${widget.post.createdAt.month}/${widget.post.createdAt.year} • ${widget.post.isLocal ? (widget.post.regionName ?? "Lokal") : "Nasional"}',
+                '${widget.post.createdAt.day}/${widget.post.createdAt.month}/${widget.post.createdAt.year} • ${widget.post.regionName ?? "Indonesia"}',
                 style: AppTextStyles.caption,
               ),
             ],

@@ -75,11 +75,14 @@ class CommunityService {
             'community_post_images(id, post_id, storage_path, alt_text, sort_order), '
             'community_post_hazards(hazard_tags(id, slug, name))',
           )
-          .eq('status', 'PUBLISHED')
-          .eq('scope', scope);
+          .eq('status', 'PUBLISHED');
 
-      if (scope == 'LOCAL' && regionId != null) {
-        query = query.eq('region_id', regionId);
+      if (scope == 'LOCAL') {
+        if (regionId != null && regionId.isNotEmpty) {
+          query = query.eq('region_id', regionId);
+        } else {
+          query = query.eq('region_id', '00000000-0000-0000-0000-000000000000');
+        }
       }
       if (categoryId != null && categoryId.isNotEmpty) {
         query = query.eq('category_id', categoryId);
@@ -119,8 +122,8 @@ class CommunityService {
     required String body,
     String? title,
     required String categoryId,
-    required String scope,
-    String? regionId,
+    required String regionId,
+    String scope = 'LOCAL',
     List<XFile> images = const [],
     List<String> hazardTagIds = const [],
   }) async {
@@ -130,9 +133,9 @@ class CommunityService {
       throw const AppAuthException('Anda harus masuk untuk membuat postingan.');
     }
 
-    if (scope == 'LOCAL' && regionId == null) {
+    if (regionId.trim().isEmpty) {
       throw const ValidationException(
-        'Postingan lokal memerlukan wilayah profil yang terdaftar.',
+        'Silakan pilih daerah kejadian postingan.',
       );
     }
 
@@ -141,14 +144,12 @@ class CommunityService {
         'author_id': user.id,
         'body': body.trim(),
         'category_id': categoryId,
+        'region_id': regionId,
         'scope': scope,
         'status': 'PUBLISHED',
       };
       if (title != null && title.trim().isNotEmpty) {
         insertData['title'] = title.trim();
-      }
-      if (regionId != null) {
-        insertData['region_id'] = regionId;
       }
 
       final inserted = await client

@@ -10,9 +10,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import 'widgets/image_picker_row.dart';
-import 'widgets/post_scope_selector.dart';
+import 'widgets/post_region_selector.dart';
 
-/// Screen for creating and publishing a community post.
+/// Screen for creating and publishing a community post with specific incident region.
 class CreatePostScreen extends ConsumerStatefulWidget {
   const CreatePostScreen({super.key});
 
@@ -25,7 +25,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   final _bodyController = TextEditingController();
   final _picker = ImagePicker();
 
-  String _scope = 'LOCAL';
+  String? _selectedRegionId;
   String? _selectedCategoryId;
   final List<String> _selectedHazardIds = [];
   final List<XFile> _images = [];
@@ -64,11 +64,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
       return;
     }
 
-    final profile = ref.read(userProfileProvider).asData?.value;
-    if (_scope == 'LOCAL' && profile?.regionId == null) {
+    if (_selectedRegionId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Postingan lokal memerlukan wilayah profil.'),
+          content: Text('Silakan pilih daerah kejadian informasi.'),
         ),
       );
       return;
@@ -84,8 +83,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 ? null
                 : _titleController.text.trim(),
             categoryId: _selectedCategoryId!,
-            scope: _scope,
-            regionId: _scope == 'LOCAL' ? profile?.regionId : null,
+            regionId: _selectedRegionId!,
+            scope: 'LOCAL',
             images: _images,
             hazardTagIds: _selectedHazardIds,
           );
@@ -115,6 +114,9 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         ref.watch(communityCategoriesProvider).asData?.value ?? [];
     final hazardTags = ref.watch(hazardTagsProvider).asData?.value ?? [];
     final profile = ref.watch(userProfileProvider).asData?.value;
+    final regions = ref.watch(regionsListProvider).asData?.value ?? [];
+
+    _selectedRegionId ??= profile?.regionId;
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -149,10 +151,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PostScopeSelector(
-              scope: _scope,
-              onScopeChanged: (s) => setState(() => _scope = s),
-              regionName: profile?.regionName,
+            PostRegionSelector(
+              selectedRegionId: _selectedRegionId,
+              regions: regions,
+              onRegionChanged: (r) => setState(() => _selectedRegionId = r),
             ),
             const SizedBox(height: AppSpacing.md),
             _buildCategorySelector(categories),

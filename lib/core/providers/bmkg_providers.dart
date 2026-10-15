@@ -1,7 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/bmkg_quake.dart';
+import '../../services/alarm_sound_service.dart';
 import '../../services/bmkg_alert_service.dart';
+
+/// Provider for AlarmSoundService.
+final alarmSoundServiceProvider = Provider<AlarmSoundService>((ref) {
+  final service = AlarmSoundService();
+  ref.onDispose(() => service.dispose());
+  return service;
+});
 
 /// Provider for BmkgAlertService.
 final bmkgAlertServiceProvider = Provider<BmkgAlertService>((ref) {

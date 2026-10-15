@@ -12,6 +12,7 @@ import 'widgets/checkin_action_sheet.dart';
 import 'widgets/contact_card.dart';
 import 'widgets/family_checkin_card.dart';
 import 'widgets/family_hotlines_tab.dart';
+import '../../utils/phone_launcher.dart';
 
 /// Screen managing emergency contacts, family safety check-ins, and national hotlines.
 class FamilyScreen extends ConsumerStatefulWidget {
@@ -90,8 +91,11 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen>
             error: (e, _) => Center(child: Text('Gagal: $e')),
           ),
           FamilyHotlinesTab(
-            onCallHotline: (phone) =>
-                _showFeedback('Menghubungi hotline', phone),
+            onCallHotline: (phone) => PhoneLauncher.launchPhone(
+              context,
+              phone,
+              label: 'Hotline Darurat',
+            ),
           ),
         ],
       ),
@@ -140,8 +144,10 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen>
           contact: c,
           onEdit: () => AddContactDialog.show(context, contactToEdit: c),
           onDelete: () => _confirmDelete(c),
-          onCall: () => _showFeedback('Memanggil', c.phoneNumber),
-          onWhatsApp: () => _showFeedback('Membuka WhatsApp', c.name),
+          onCall: () =>
+              PhoneLauncher.launchPhone(context, c.phoneNumber, label: c.name),
+          onWhatsApp: () =>
+              PhoneLauncher.launchWhatsApp(context, c.phoneNumber),
         );
       },
     );

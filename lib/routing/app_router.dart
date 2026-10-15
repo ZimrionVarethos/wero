@@ -40,14 +40,31 @@ abstract final class AppRoutes {
   static const String bmkgQuakes = '/bmkg-quakes';
 }
 
+/// Notifier listening to auth changes to refresh GoRouter dynamically.
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen(currentUserProvider, (_, _) => notifyListeners());
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
 /// Provider exposing the configured [GoRouter] instance.
 final routerProvider = Provider<GoRouter>((ref) {
-  final user = ref.watch(currentUserProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
-    initialLocation: user != null ? AppRoutes.activity : AppRoutes.login,
+    refreshListenable: notifier,
+    initialLocation: ref.read(currentUserProvider) != null
+        ? AppRoutes.activity
+        : AppRoutes.login,
     debugLogDiagnostics: false,
     redirect: (context, state) {
+      final user = ref.read(currentUserProvider);
       final isAuth = user != null;
       final isLoginRoute = state.matchedLocation == AppRoutes.login;
 
@@ -93,6 +110,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final post = state.extra as CommunityPost;
           return PostDetailScreen(post: post);
+        },
+      ),
+      GoRoute(
+        path: '/community/:id',
+        builder: (context, state) {
+          if (state.extra is CommunityPost) {
+            return PostDetailScreen(post: state.extra as CommunityPost);
+          }
+          return const CommunityFeedScreen();
         },
       ),
       GoRoute(

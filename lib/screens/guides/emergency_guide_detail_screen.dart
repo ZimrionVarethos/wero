@@ -4,6 +4,7 @@ import '../../models/emergency_guide.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../utils/phone_launcher.dart';
 
 /// Screen displaying in-depth step-by-step survival procedures for a specific hazard.
 class EmergencyGuideDetailScreen extends StatelessWidget {
@@ -138,13 +139,11 @@ class EmergencyGuideDetailScreen extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Menghubungi layanan darurat: $hotline'),
-                    ),
-                  );
-                },
+                onPressed: () => PhoneLauncher.launchPhone(
+                  context,
+                  hotline,
+                  label: 'Layanan Darurat',
+                ),
               );
             }).toList(),
           ),

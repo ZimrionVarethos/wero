@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../models/chat_message.dart';
 import '../../../theme/app_colors.dart';
+import '../../../utils/phone_launcher.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_styles.dart';
 
@@ -206,10 +207,10 @@ class ChatBubble extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Menghubungi ${action.phoneNumber}...'),
-                  ),
+                PhoneLauncher.launchPhone(
+                  context,
+                  action.phoneNumber!,
+                  label: 'Layanan Darurat',
                 );
               },
               child: const Text('Panggil'),

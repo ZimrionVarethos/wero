@@ -128,15 +128,15 @@ class PostCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    post.isLocal ? Icons.location_on : Icons.public,
+                  const Icon(
+                    Icons.location_on_outlined,
                     size: 13,
                     color: AppColors.textSecondary,
                   ),
                   const SizedBox(width: 2),
                   Flexible(
                     child: Text(
-                      post.isLocal ? (post.regionName ?? 'Lokal') : 'Nasional',
+                      post.regionName ?? 'Indonesia',
                       style: AppTextStyles.caption.copyWith(fontSize: 11),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

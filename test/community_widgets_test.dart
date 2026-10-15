@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wero/models/community_category.dart';
 import 'package:wero/models/community_post.dart';
+import 'package:wero/models/region.dart';
 import 'package:wero/screens/activity/widgets/local_community_section.dart';
 import 'package:wero/screens/community/widgets/category_filter_bar.dart';
 import 'package:wero/screens/community/widgets/post_card.dart';
+import 'package:wero/screens/community/widgets/post_region_selector.dart';
 import 'package:wero/screens/community/widgets/scope_selector.dart';
 
 void main() {
@@ -152,5 +154,45 @@ void main() {
         expect(find.text('Lihat Semua'), findsOneWidget);
       },
     );
+
+    testWidgets('PostRegionSelector renders dropdown with regions list', (
+      tester,
+    ) async {
+      String? chosen;
+      final regions = [
+        const Region(id: 'r1', name: 'Kota Bogor', level: 'city'),
+        const Region(id: 'r2', name: 'Kota Bandung', level: 'city'),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return PostRegionSelector(
+                  selectedRegionId: chosen,
+                  regions: regions,
+                  onRegionChanged: (val) => setState(() => chosen = val),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Daerah Kejadian (Lokasi Berita)'), findsOneWidget);
+      expect(find.text('Pilih Kota / Kabupaten Kejadian'), findsOneWidget);
+
+      await tester.tap(find.byType(DropdownButtonFormField<String>));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Kota Bogor').last, findsOneWidget);
+      expect(find.text('Kota Bandung').last, findsOneWidget);
+
+      await tester.tap(find.text('Kota Bogor').last);
+      await tester.pumpAndSettle();
+
+      expect(chosen, 'r1');
+    });
   });
 }

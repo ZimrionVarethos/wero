@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/errors/app_exceptions.dart';
 import '../../core/providers/auth_providers.dart';
+import '../../core/providers/supabase_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
@@ -36,9 +37,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _fillDemoAccount() {
+    _emailController.text = 'siagaku.admin@gmail.com';
+    _passwordController.text = 'PasswordSiagaku123!';
+    _submit();
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -47,13 +53,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final authService = ref.read(authServiceProvider);
       if (_isSignUp) {
-        await authService.signUp(
+        final res = await authService.signUp(
           email: _emailController.text,
           password: _passwordController.text,
           displayName: _nameController.text.isNotEmpty
               ? _nameController.text
               : 'Warga Siaga',
         );
+        if (res?.session == null && mounted) {
+          setState(() {
+            _errorMessage = 'Akun terdaftar. Silakan verifikasi email.';
+            _isSignUp = false;
+          });
+          return;
+        }
       } else {
         await authService.signIn(
           email: _emailController.text,
@@ -62,12 +75,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       if (mounted) {
+        ref.invalidate(currentUserProvider);
         ref.invalidate(userProfileProvider);
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/activity');
-        }
+        context.go('/activity');
       }
     } on AppException catch (e) {
       setState(() => _errorMessage = e.message);
@@ -86,12 +96,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: context.canPop()
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                onPressed: () => context.pop(),
-              )
-            : null,
       ),
       body: SafeArea(
         child: Center(
@@ -126,7 +130,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       _isSignUp
-                          ? 'Daftar untuk mengakses komunitas dan peringatan bencana.'
+                          ? 'Daftar untuk mengakses komunitas dan mitigasi bencana.'
                           : 'Gunakan akun Anda untuk berpartisipasi dan melapor.',
                       style: AppTextStyles.caption,
                       textAlign: TextAlign.center,
@@ -220,6 +224,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                       ),
                     ),
+                    if (!_isSignUp) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      OutlinedButton.icon(
+                        onPressed: _isLoading ? null : _fillDemoAccount,
+                        icon: const Icon(Icons.flash_on_rounded, size: 18),
+                        label: const Text('Masuk Cepat (Akun Demo)'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.chartBlue,
+                          side: const BorderSide(color: AppColors.chartBlue),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.base),
                     TextButton(
                       onPressed: () {

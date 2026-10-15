@@ -25,9 +25,11 @@ final authStateChangesProvider = StreamProvider<AuthState?>((ref) {
 });
 
 /// Provider for the currently signed-in Supabase [User].
+/// Reactively updates whenever authentication state changes (sign in, sign out, token refresh).
 final currentUserProvider = Provider<User?>((ref) {
+  final authState = ref.watch(authStateChangesProvider);
   final client = ref.watch(supabaseClientProvider);
-  return client?.auth.currentUser;
+  return authState.value?.session?.user ?? client?.auth.currentUser;
 });
 
 /// Convenience provider indicating whether a user is authenticated.

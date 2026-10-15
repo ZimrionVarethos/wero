@@ -102,6 +102,30 @@ class RegionDetectorService {
     );
   }
 
+  static const Map<String, LatLng> _cityCoordinates = {
+    'Bogor': LatLng(-6.5971, 106.8060),
+    'Depok': LatLng(-6.4025, 106.7942),
+    'Bekasi': LatLng(-6.2383, 106.9756),
+    'Tangerang': LatLng(-6.1783, 106.6319),
+    'Bandung': LatLng(-6.9175, 107.6191),
+    'Jakarta': LatLng(-6.2088, 106.8456),
+    'Semarang': LatLng(-7.0051, 110.4381),
+    'Surakarta': LatLng(-7.5666, 110.8166),
+    'Yogyakarta': LatLng(-7.7956, 110.3695),
+    'Sleman': LatLng(-7.7156, 110.3556),
+    'Bantul': LatLng(-7.8900, 110.3300),
+    'Surabaya': LatLng(-7.2575, 112.7521),
+    'Malang': LatLng(-7.9666, 112.6326),
+    'Denpasar': LatLng(-8.6705, 115.2126),
+    'Badung': LatLng(-8.5833, 115.1833),
+    'Medan': LatLng(3.5952, 98.6722),
+    'Palembang': LatLng(-2.9761, 104.7754),
+    'Padang': LatLng(-0.9471, 100.4172),
+    'Makassar': LatLng(-5.1477, 119.4327),
+    'Manado': LatLng(1.4748, 124.8421),
+    'Balikpapan': LatLng(-1.2379, 116.8289),
+  };
+
   Region _matchByCoordinates(LatLng pos, List<Region> regions) {
     if (regions.isEmpty) {
       return const Region(
@@ -111,19 +135,27 @@ class RegionDetectorService {
       );
     }
 
-    // DIY Jogja approximation bounds
-    if (pos.latitude >= -8.3 &&
-        pos.latitude <= -7.4 &&
-        pos.longitude >= 110.0 &&
-        pos.longitude <= 110.8) {
-      final jogja = regions
-          .where((r) => r.name.contains('Yogyakarta'))
+    // Find closest Indonesian city anchor
+    double minDistance = double.infinity;
+    String closestCity = '';
+
+    for (final entry in _cityCoordinates.entries) {
+      final dLat = pos.latitude - entry.value.latitude;
+      final dLng = pos.longitude - entry.value.longitude;
+      final distance = (dLat * dLat) + (dLng * dLng);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestCity = entry.key;
+      }
+    }
+
+    if (closestCity.isNotEmpty) {
+      final matched = regions
+          .where(
+            (r) => r.name.toLowerCase().contains(closestCity.toLowerCase()),
+          )
           .firstOrNull;
-      if (jogja != null) return jogja;
-      final sleman = regions
-          .where((r) => r.name.contains('Sleman'))
-          .firstOrNull;
-      if (sleman != null) return sleman;
+      if (matched != null) return matched;
     }
 
     return regions.first;

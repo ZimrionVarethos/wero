@@ -140,7 +140,8 @@ class LocalCommunitySection extends StatelessWidget {
           if (i > 0) const SizedBox(height: AppSpacing.base),
           PostCard(
             post: localPosts[i],
-            onTap: () => context.push('/community/${localPosts[i].id}'),
+            onTap: () =>
+                context.push(AppRoutes.postDetail, extra: localPosts[i]),
           ),
         ],
       ],
