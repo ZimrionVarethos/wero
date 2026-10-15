@@ -1,8 +1,10 @@
 import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'alarm_sound_service.dart';
 
 /// Top-level background message handler executed by the OS when app is closed.

@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_bottom_navigation.dart';
+import '../../widgets/app_logo.dart';
 import 'widgets/category_filter_bar.dart';
 import 'widgets/empty_region_prompt.dart';
 import 'widgets/post_card.dart';
@@ -44,8 +45,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
     if (index == 0) context.go(AppRoutes.activity);
     if (index == 1) context.go(AppRoutes.assistant);
     if (index == 2) return; // already here
-    if (index == 3) context.go(AppRoutes.statistics);
-    if (index == 4) context.go(AppRoutes.profile);
+    if (index == 3) context.go(AppRoutes.profile);
   }
 
   @override
@@ -55,7 +55,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
     final profile = ref.watch(userProfileProvider).asData?.value;
 
     return Scaffold(
-      backgroundColor: AppColors.canvasBlue,
+      backgroundColor: AppColors.backgroundCream,
       body: SafeArea(
         child: Column(
           children: [
@@ -104,7 +104,8 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Komunitas', style: AppTextStyles.screenTitle),
+              const AppLogo(height: 28),
+              const SizedBox(width: AppSpacing.xs),
               IconButton(
                 icon: const Icon(
                   Icons.shield_outlined,

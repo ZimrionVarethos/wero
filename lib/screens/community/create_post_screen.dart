@@ -9,6 +9,7 @@ import '../../models/hazard_tag.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/app_header.dart';
 import 'widgets/image_picker_row.dart';
 import 'widgets/post_region_selector.dart';
 
@@ -120,11 +121,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: Text(
-          'Buat Postingan',
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 18),
-        ),
+      appBar: AppHeader(
+        title: 'Buat Postingan',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.sm),

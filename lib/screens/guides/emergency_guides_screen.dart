@@ -9,6 +9,7 @@ import '../../services/offline_guide_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/app_header.dart';
 import 'widgets/go_bag_dialog.dart';
 import 'widgets/guide_card.dart';
 
@@ -55,12 +56,7 @@ class _EmergencyGuidesScreenState extends ConsumerState<EmergencyGuidesScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.canvasBlue,
-      appBar: AppBar(
-        title: Text(
-          'Buku Saku Panduan Darurat',
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 18),
-        ),
-      ),
+      appBar: const AppHeader(title: 'Panduan Darurat'),
       body: Column(
         children: [
           _buildGoBagBanner(context, goBagState, totalGoBag),

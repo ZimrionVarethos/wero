@@ -8,6 +8,7 @@ import '../../core/providers/supabase_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/app_header.dart';
 
 /// Screen for user login and registration via Supabase Auth.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -92,11 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.canvasBlue,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
+      appBar: const AppHeader(showBackButton: false, actions: []),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

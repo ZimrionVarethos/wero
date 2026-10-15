@@ -37,10 +37,6 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
       return;
     }
     if (index == 3) {
-      context.go(AppRoutes.statistics);
-      return;
-    }
-    if (index == 4) {
       context.go(AppRoutes.profile);
       return;
     }
@@ -61,7 +57,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
         : 'Lokal';
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.backgroundCream,
       appBar: AppHeader(showBackButton: Navigator.canPop(context)),
       body: RefreshIndicator(
         onRefresh: () async {

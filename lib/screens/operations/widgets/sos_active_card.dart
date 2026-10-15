@@ -22,9 +22,9 @@ class SosActiveCard extends ConsumerWidget {
       ),
       padding: const EdgeInsets.all(AppSpacing.base),
       decoration: BoxDecoration(
-        color: AppColors.softRed,
+        color: AppColors.awasBg,
         borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(color: AppColors.chartRed, width: 1.5),
+        border: Border.all(color: AppColors.awas, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

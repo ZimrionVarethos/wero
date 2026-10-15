@@ -50,9 +50,7 @@ class NotificationLogSheet extends ConsumerWidget {
                     ? _buildEmptyState()
                     : _buildEventsList(context, events, scrollController),
                 loading: () => const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.chartBlue,
-                  ),
+                  child: CircularProgressIndicator(color: AppColors.chartBlue),
                 ),
                 error: (e, _) => Center(
                   child: Text(
@@ -71,7 +69,10 @@ class NotificationLogSheet extends ConsumerWidget {
   Widget _buildDragHandle() {
     return Center(
       child: Container(
-        margin: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.xs),
+        margin: const EdgeInsets.only(
+          top: AppSpacing.sm,
+          bottom: AppSpacing.xs,
+        ),
         width: 36,
         height: 4,
         decoration: BoxDecoration(
@@ -142,7 +143,11 @@ class NotificationLogSheet extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_sync_rounded, color: AppColors.chartBlue, size: 20),
+          const Icon(
+            Icons.cloud_sync_rounded,
+            color: AppColors.chartBlue,
+            size: 20,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
@@ -174,11 +179,17 @@ class NotificationLogSheet extends ConsumerWidget {
         final targetLabel = event.targetType == 'ALL'
             ? '🌐 Nasional'
             : (event.targetRegions.isNotEmpty
-                ? '📍 ${event.targetRegions.join(", ")}'
-                : '📍 Daerah Terpilih');
+                  ? '📍 ${event.targetRegions.join(", ")}'
+                  : '📍 Daerah Terpilih');
 
         return InkWell(
-          onTap: () => _showDetailDialog(context, event, badgeColor, badgeText, targetLabel),
+          onTap: () => _showDetailDialog(
+            context,
+            event,
+            badgeColor,
+            badgeText,
+            targetLabel,
+          ),
           borderRadius: BorderRadius.circular(AppRadius.card),
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -197,7 +208,10 @@ class NotificationLogSheet extends ConsumerWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: badgeColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(AppRadius.chip),
@@ -234,7 +248,9 @@ class NotificationLogSheet extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   event.headline,
-                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -296,9 +312,15 @@ class NotificationLogSheet extends ConsumerWidget {
           children: [
             Text(event.headline, style: AppTextStyles.sectionTitle),
             const SizedBox(height: AppSpacing.sm),
-            Text('Jenis: ${event.disasterType}', style: AppTextStyles.bodySecondary),
+            Text(
+              'Jenis: ${event.disasterType}',
+              style: AppTextStyles.bodySecondary,
+            ),
             Text('Sumber: ${event.source}', style: AppTextStyles.bodySecondary),
-            Text('Waktu: ${_formatTime(event.occurredAt)}', style: AppTextStyles.bodySecondary),
+            Text(
+              'Waktu: ${_formatTime(event.occurredAt)}',
+              style: AppTextStyles.bodySecondary,
+            ),
           ],
         ),
         actions: [
@@ -325,10 +347,11 @@ class NotificationLogSheet extends ConsumerWidget {
 
   (Color, String) _resolveSeverity(String severity) {
     return switch (severity.toUpperCase()) {
-      'AWAS' => (AppColors.chartRed, 'AWAS'),
-      'SIAGA' => (AppColors.accentOrange, 'SIAGA'),
-      'WASPADA' => (const Color(0xFFF5A623), 'WASPADA'),
-      _ => (AppColors.chartBlue, 'INFO'),
+      'AWAS' => (AppColors.awas, 'AWAS'),
+      'SIAGA' => (AppColors.siaga, 'SIAGA'),
+      'WASPADA' => (AppColors.waspada, 'WASPADA'),
+      'AMAN' => (AppColors.aman, 'AMAN'),
+      _ => (AppColors.info, 'INFO'),
     };
   }
 

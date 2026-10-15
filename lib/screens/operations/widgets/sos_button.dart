@@ -131,14 +131,14 @@ class _SosButtonState extends ConsumerState<SosButton>
         animation: _controller,
         builder: (context, child) {
           return Container(
-            height: 52,
+            height: 56,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.chartRed,
+              color: AppColors.accentOrange,
               borderRadius: BorderRadius.circular(AppRadius.button),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.chartRed.withValues(alpha: 0.35),
+                  color: AppColors.accentOrange.withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

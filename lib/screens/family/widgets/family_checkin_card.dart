@@ -14,10 +14,10 @@ class FamilyCheckinCard extends StatelessWidget {
 
   Color get _statusColor {
     return switch (checkin.status) {
-      'SAFE' => AppColors.chartGreen,
-      'EVACUATING' => AppColors.chartBlue,
-      'NEED_HELP' => AppColors.accentOrange,
-      _ => AppColors.textSecondary,
+      'SAFE' => AppColors.aman,
+      'EVACUATING' => AppColors.siaga,
+      'NEED_HELP' => AppColors.awas,
+      _ => AppColors.mutedText,
     };
   }
 

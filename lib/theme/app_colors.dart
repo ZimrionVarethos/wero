@@ -1,29 +1,63 @@
 import 'package:flutter/material.dart';
 
-/// Centralized color tokens for the Wero design system.
-/// All color references in the app must use these constants.
+/// Centralized color tokens for the Siagaku design system.
+/// Single source of truth adhering strictly to SKILL.md.
 abstract final class AppColors {
-  // Page/canvas backgrounds
-  static const Color canvasBlue = Color(0xFFEAF6FF);
-  static const Color surface = Color(0xFFFFFFFF);
+  // Brand Foundation
+  static const Color primaryNavy = Color(
+    0xFF12263F,
+  ); // Navigation, structural backgrounds, key headings
+  static const Color accentOrange = Color(
+    0xFFE8590C,
+  ); // Primary action buttons ONLY (never use as status color!)
+  static const Color backgroundCream = Color(
+    0xFFF4F2EE,
+  ); // Canvas / Scaffold page background
+  static const Color surfaceWhite = Color(
+    0xFFFFFFFF,
+  ); // Cards, panels, input surfaces
+  static const Color borderNeutral = Color(
+    0xFFD9D5CD,
+  ); // Dividers, card borders, subtle separators
+  static const Color primaryText = Color(
+    0xFF1A1D21,
+  ); // Headings, body text, primary labels
+  static const Color mutedText = Color(
+    0xFF5F6B76,
+  ); // Supporting text, metadata, inactive controls
 
-  // Typography
-  static const Color textPrimary = Color(0xFF111111);
-  static const Color textSecondary = Color(0xFF858585);
+  // Semantic Disaster Status Colors (Immutable — never repurpose for decoration!)
+  static const Color awas = Color(
+    0xFFC62828,
+  ); // Highest danger — immediate threat / evacuation
+  static const Color siaga = Color(
+    0xFFE65100,
+  ); // Alert — prepare for possible escalation
+  static const Color waspada = Color(
+    0xFFF9A825,
+  ); // Warning — increased vigilance
+  static const Color aman = Color(
+    0xFF2E7D32,
+  ); // Safe / all clear / normal condition
+  static const Color info = Color(0xFF1565C0); // Informational / BMKG advisory
 
-  // Borders and dividers
-  static const Color border = Color(0xFFD9E0E5);
+  // Status Backgrounds (10-15% opacity tints for badges & warning panels)
+  static const Color awasBg = Color(0xFFFFEBEE);
+  static const Color siagaBg = Color(0xFFFFF3E0);
+  static const Color waspadaBg = Color(0xFFFFFDE7);
+  static const Color amanBg = Color(0xFFE8F5E9);
+  static const Color infoBg = Color(0xFFE3F2FD);
 
-  // Accents
-  static const Color accentOrange = Color(0xFFF07800);
-
-  // Chart bar colors
-  static const Color chartBlue = Color(0xFF20A8F5);
-  static const Color chartGreen = Color(0xFF77E600);
-  static const Color chartRed = Color(0xFFFF4D52);
-
-  // Soft icon backgrounds
-  static const Color softGreen = Color(0xFFDDF6C5);
-  static const Color softRed = Color(0xFFFFD9D9);
-  static const Color softBlue = Color(0xFFCDEBFF);
+  // Backward compatibility aliases for existing codebase
+  static const Color surface = surfaceWhite;
+  static const Color textPrimary = primaryText;
+  static const Color textSecondary = mutedText;
+  static const Color border = borderNeutral;
+  static const Color canvasBlue = backgroundCream;
+  static const Color chartBlue = info;
+  static const Color chartGreen = aman;
+  static const Color chartRed = awas;
+  static const Color softGreen = amanBg;
+  static const Color softRed = awasBg;
+  static const Color softBlue = infoBg;
 }

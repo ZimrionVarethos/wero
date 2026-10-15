@@ -7,6 +7,7 @@ import '../../models/family_checkin.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/app_header.dart';
 import 'widgets/add_contact_dialog.dart';
 import 'widgets/checkin_action_sheet.dart';
 import 'widgets/contact_card.dart';
@@ -56,11 +57,8 @@ class _FamilyScreenState extends ConsumerState<FamilyScreen>
 
     return Scaffold(
       backgroundColor: AppColors.canvasBlue,
-      appBar: AppBar(
-        title: Text(
-          'Kerabat Siaga & Check-in',
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 18),
-        ),
+      appBar: AppHeader(
+        title: 'Kerabat Siaga',
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.chartBlue,

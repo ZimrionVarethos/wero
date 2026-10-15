@@ -6,6 +6,7 @@ import '../../models/bmkg_quake.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/app_header.dart';
 import 'widgets/bmkg_alert_detail_sheet.dart';
 
 /// Screen displaying the directory of recent earthquakes across Indonesia from BMKG.
@@ -64,12 +65,7 @@ class _BmkgQuakesScreenState extends ConsumerState<BmkgQuakesScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.canvasBlue,
-      appBar: AppBar(
-        title: Text(
-          'Gempa Terkini BMKG',
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 18),
-        ),
-      ),
+      appBar: const AppHeader(title: 'Gempa BMKG'),
       body: Column(
         children: [
           _buildSearchBar(),

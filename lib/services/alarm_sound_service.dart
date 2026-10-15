@@ -9,8 +9,9 @@ class AlarmSoundService {
     _player.setReleaseMode(ReleaseMode.loop);
   }
 
-  static const MethodChannel _vibrationChannel =
-      MethodChannel('com.siagaku.wero/vibration');
+  static const MethodChannel _vibrationChannel = MethodChannel(
+    'com.siagaku.wero/vibration',
+  );
 
   final AudioPlayer _player;
   Timer? _hapticTimer;

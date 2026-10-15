@@ -13,10 +13,11 @@ class DisasterAlertBanner extends StatelessWidget {
 
   Color get _severityColor {
     return switch (event.severity) {
-      'AWAS' => AppColors.chartRed,
-      'SIAGA' => AppColors.accentOrange,
-      'WASPADA' => const Color(0xFFF5A623),
-      _ => AppColors.chartBlue,
+      'AWAS' => AppColors.awas,
+      'SIAGA' => AppColors.siaga,
+      'WASPADA' => AppColors.waspada,
+      'AMAN' => AppColors.aman,
+      _ => AppColors.info,
     };
   }
 

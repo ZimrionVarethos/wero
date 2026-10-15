@@ -34,5 +34,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  # Font files will be added here once Poppins TTF assets are available locally.
-  # Until then, google_fonts package is used for runtime loading.
+  assets:
+    - assets/images/
+    - logodantulisan.png

@@ -47,7 +47,8 @@ final class DisasterEvent {
     }
 
     // 2. If marked SPECIFIC but no regions configured, fallback to true.
-    final hasTargets = targetRegionIds.isNotEmpty ||
+    final hasTargets =
+        targetRegionIds.isNotEmpty ||
         targetRegions.isNotEmpty ||
         (regionId != null && regionId!.isNotEmpty);
     if (!hasTargets) {
@@ -129,16 +130,19 @@ final class DisasterEvent {
       } catch (_) {}
     }
 
-    final targetType = (payload['target_type'] as String?) ??
+    final targetType =
+        (payload['target_type'] as String?) ??
         (json['region_id'] != null ? 'SPECIFIC' : 'ALL');
 
-    final targetRegionIds = (payload['target_region_ids'] as List?)
+    final targetRegionIds =
+        (payload['target_region_ids'] as List?)
             ?.map((e) => e.toString().trim())
             .where((s) => s.isNotEmpty)
             .toList() ??
         <String>[];
 
-    final targetRegions = (payload['target_regions'] as List?)
+    final targetRegions =
+        (payload['target_regions'] as List?)
             ?.map((e) => e.toString().trim())
             .where((s) => s.isNotEmpty)
             .toList() ??

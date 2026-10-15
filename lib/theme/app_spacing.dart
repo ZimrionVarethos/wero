@@ -1,5 +1,5 @@
-/// Centralized spacing tokens for the Wero design system.
-/// Uses an 8-point base scale. All padding/margin values must use these.
+/// Centralized spacing tokens for the Siagaku design system.
+/// Uses an 8-point base scale with 4-point sub-steps (4, 8, 12, 16, 20, 24, 32 dp).
 abstract final class AppSpacing {
   static const double xs = 4.0;
   static const double sm = 8.0;
@@ -9,14 +9,25 @@ abstract final class AppSpacing {
   static const double xl = 24.0;
   static const double xxl = 32.0;
 
-  /// Standard horizontal page padding.
-  static const double pagePadding = 24.0;
+  /// Standard horizontal page padding for mobile.
+  static const double pagePadding = 20.0;
 }
 
-/// Centralized corner radius tokens for the Wero design system.
+/// Centralized corner radius tokens for the Siagaku design system.
 abstract final class AppRadius {
-  static const double card = 16.0;
-  static const double chip = 20.0;
-  static const double button = 18.0;
-  static const double iconTile = 12.0;
+  /// Standard radius for cards and modal sheets (~12 dp).
+  static const double card = 12.0;
+
+  /// Standard radius for buttons (~12 dp).
+  static const double button = 12.0;
+
+  /// Standard radius for text fields and inputs (~10 dp).
+  static const double input = 10.0;
+
+  /// Standard radius for status badges and chips (~8 dp).
+  static const double badge = 8.0;
+  static const double chip = 8.0;
+
+  /// Standard radius for icon tiles and small controls.
+  static const double iconTile = 10.0;
 }

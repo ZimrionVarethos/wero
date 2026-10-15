@@ -7,6 +7,7 @@ import '../../models/community_post.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/app_header.dart';
 import 'widgets/report_post_dialog.dart';
 
 /// Screen displaying the full community post with images and action buttons.
@@ -87,11 +88,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        title: Text(
-          'Detail Postingan',
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 18),
-        ),
+      appBar: AppHeader(
+        title: 'Detail Postingan',
         actions: [
           if (isAuthor)
             IconButton(

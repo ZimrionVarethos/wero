@@ -7,6 +7,7 @@ import '../../models/community_report.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/app_header.dart';
 import 'widgets/moderation_action_dialog.dart';
 import 'widgets/moderation_history_tile.dart';
 import 'widgets/reported_post_card.dart';
@@ -102,11 +103,8 @@ class _ModerationScreenState extends ConsumerState<ModerationScreen>
 
     return Scaffold(
       backgroundColor: AppColors.canvasBlue,
-      appBar: AppBar(
-        title: Text(
-          'Moderasi Komunitas',
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 18),
-        ),
+      appBar: AppHeader(
+        title: 'Moderasi Komunitas',
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.textPrimary,

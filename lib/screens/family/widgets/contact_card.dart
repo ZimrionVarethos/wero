@@ -24,10 +24,10 @@ class ContactCard extends StatelessWidget {
 
   Color get _statusColor {
     return switch (contact.status) {
-      'SAFE' => AppColors.chartGreen,
-      'EVACUATING' => AppColors.chartBlue,
-      'NEED_HELP' => AppColors.accentOrange,
-      _ => AppColors.textSecondary,
+      'SAFE' => AppColors.aman,
+      'EVACUATING' => AppColors.siaga,
+      'NEED_HELP' => AppColors.awas,
+      _ => AppColors.mutedText,
     };
   }
 

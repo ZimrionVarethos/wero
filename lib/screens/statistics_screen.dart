@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../core/providers/bmkg_providers.dart';
 import '../models/bmkg_quake.dart';
-import '../routing/app_router.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
-import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_header.dart';
 import 'operations/widgets/bmkg_alert_detail_sheet.dart';
 import 'operations/widgets/disaster_history_tile.dart';
@@ -30,26 +27,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   String _selectedFilter = 'Semua';
   static const _filterOptions = ['Semua', 'M ≥ 5.0', 'Dirasakan'];
 
-  void _onNavTap(int index) {
-    if (index == 0) {
-      context.go(AppRoutes.activity);
-      return;
-    }
-    if (index == 1) {
-      context.go(AppRoutes.assistant);
-      return;
-    }
-    if (index == 2) {
-      context.go(AppRoutes.community);
-      return;
-    }
-    if (index == 3) return;
-    if (index == 4) {
-      context.go(AppRoutes.profile);
-      return;
-    }
-  }
-
   void _openDetail(BuildContext context, BmkgQuake quake) {
     showModalBottomSheet(
       context: context,
@@ -69,7 +46,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final recentQuakesAsync = ref.watch(recentBmkgQuakesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.backgroundCream,
       appBar: AppHeader(showBackButton: Navigator.canPop(context)),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -177,10 +154,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
-      ),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 3,
-        onTap: _onNavTap,
       ),
     );
   }

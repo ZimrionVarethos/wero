@@ -11,6 +11,7 @@ import 'widgets/admin_facility_dialog.dart';
 import 'widgets/evacuation_map_view.dart';
 import 'widgets/facility_card.dart';
 import 'widgets/facility_detail_sheet.dart';
+import '../../widgets/app_header.dart';
 
 /// Screen listing verified evacuation shelters and health facilities with search, filters, and map toggle.
 class EvacuationScreen extends ConsumerStatefulWidget {
@@ -72,12 +73,9 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
     final pointsAsync = ref.watch(evacuationPointsProvider(query));
 
     return Scaffold(
-      backgroundColor: AppColors.canvasBlue,
-      appBar: AppBar(
-        title: Text(
-          'Titik & Posko Evakuasi',
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 18),
-        ),
+      backgroundColor: AppColors.backgroundCream,
+      appBar: AppHeader(
+        title: 'Posko Evakuasi',
         actions: [
           IconButton(
             tooltip: 'Tambah Posko Baru (Admin)',

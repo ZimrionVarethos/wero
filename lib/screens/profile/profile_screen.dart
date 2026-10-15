@@ -30,13 +30,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _onNavTap(int index) {
     if (index == 0) {
-      context.go('/activity');
+      context.go(AppRoutes.activity);
     } else if (index == 1) {
       context.go(AppRoutes.assistant);
     } else if (index == 2) {
-      context.go('/community');
+      context.go(AppRoutes.community);
     } else if (index == 3) {
-      context.go('/statistics');
+      return;
     }
   }
 
@@ -99,7 +99,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final regionsAsync = ref.watch(regionsListProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.backgroundCream,
       appBar: AppHeader(showBackButton: context.canPop()),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.pagePadding),
@@ -240,7 +240,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
       bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 4,
+        currentIndex: 3,
         onTap: _onNavTap,
       ),
     );

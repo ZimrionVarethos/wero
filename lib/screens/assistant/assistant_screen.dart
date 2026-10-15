@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_bottom_navigation.dart';
+import '../../widgets/app_logo.dart';
 import 'widgets/chat_bubble.dart';
 import 'widgets/chat_input_bar.dart';
 import 'widgets/gemini_avatar.dart';
@@ -36,8 +37,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     if (index == 0) context.go(AppRoutes.activity);
     if (index == 1) return; // already here
     if (index == 2) context.go(AppRoutes.community);
-    if (index == 3) context.go(AppRoutes.statistics);
-    if (index == 4) context.go(AppRoutes.profile);
+    if (index == 3) context.go(AppRoutes.profile);
   }
 
   void _scrollToBottom() {
@@ -67,7 +67,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     ref.listen(aiChatProvider, (previous, next) => _scrollToBottom());
 
     return Scaffold(
-      backgroundColor: AppColors.canvasBlue,
+      backgroundColor: AppColors.backgroundCream,
       body: SafeArea(
         child: Column(
           children: [
@@ -115,22 +115,11 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const GeminiAvatar(size: 34, iconSize: 19),
+              const AppLogo(height: 28),
               const SizedBox(width: AppSpacing.sm),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Asisten Siaga AI', style: AppTextStyles.screenTitle),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Panduan Bencana BNPB / BMKG',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.chartBlue,
-                    ),
-                  ),
-                ],
-              ),
+              const GeminiAvatar(size: 28, iconSize: 16),
             ],
           ),
           IconButton(
@@ -149,10 +138,28 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   Widget _buildDisclaimer() {
     return Container(
       width: double.infinity,
-      color: AppColors.softBlue,
+      color: AppColors.softBlue.withValues(alpha: 0.3),
       padding: const EdgeInsets.symmetric(
-        vertical: 6,
+        vertical: 4,
         horizontal: AppSpacing.pagePadding,
+      ),
+      child: const Row(
+        children: [
+          Icon(
+            Icons.offline_bolt_outlined,
+            size: 14,
+            color: AppColors.chartBlue,
+          ),
+          SizedBox(width: 6),
+          Text(
+            'Panduan Siaga Darurat Offline BNPB & BMKG',
+            style: TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

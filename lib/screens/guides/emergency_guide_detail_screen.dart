@@ -5,6 +5,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../utils/phone_launcher.dart';
+import '../../widgets/app_header.dart';
 
 /// Screen displaying in-depth step-by-step survival procedures for a specific hazard.
 class EmergencyGuideDetailScreen extends StatelessWidget {
@@ -18,12 +19,7 @@ class EmergencyGuideDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.canvasBlue,
-      appBar: AppBar(
-        title: Text(
-          guide.title,
-          style: AppTextStyles.screenTitle.copyWith(fontSize: 16),
-        ),
-      ),
+      appBar: AppHeader(title: guide.title),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.pagePadding),
         child: Column(

@@ -37,7 +37,7 @@ void main() {
       expect(quake.longitude, 120.45);
       expect(quake.isTsunamiPotential, isFalse);
       expect(quake.severity, 'SIAGA');
-      expect(quake.severityColor, AppColors.accentOrange);
+      expect(quake.severityColor, AppColors.siaga);
       expect(
         quake.shakemapUrl,
         'https://data.bmkg.go.id/DataMKG/TEWS/20261015094512.mmi.jpg',
@@ -79,7 +79,7 @@ void main() {
           'Potensi': 'Tidak berpotensi tsunami',
         });
         expect(minorQuake.severity, 'WASPADA');
-        expect(minorQuake.severityColor, const Color(0xFFF5A623));
+        expect(minorQuake.severityColor, AppColors.waspada);
 
         final severeQuake = BmkgQuake.fromJson({
           'Tanggal': '15 Okt 2026',

@@ -6,6 +6,7 @@ import 'package:wero/models/chat_message.dart';
 import 'package:wero/screens/assistant/assistant_screen.dart';
 import 'package:wero/screens/assistant/widgets/chat_bubble.dart';
 import 'package:wero/services/ai_assistant_service.dart';
+import 'package:wero/widgets/app_logo.dart';
 
 void main() {
   group('AI Assistant Service Tests', () {
@@ -146,18 +147,14 @@ void main() {
       },
     );
 
-    testWidgets('AssistantScreen renders title, disclaimer and quick prompts', (
+    testWidgets('AssistantScreen renders logo and quick prompts', (
       tester,
     ) async {
       await tester.pumpWidget(
         const ProviderScope(child: MaterialApp(home: AssistantScreen())),
       );
 
-      expect(find.text('Asisten Siaga AI'), findsOneWidget);
-      expect(
-        find.textContaining('Panduan Bencana BNPB / BMKG'),
-        findsOneWidget,
-      );
+      expect(find.byType(AppLogo), findsOneWidget);
       expect(find.text('Apa yang harus dilakukan saat gempa?'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
     });
