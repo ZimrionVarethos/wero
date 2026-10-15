@@ -11,7 +11,6 @@ import '../theme/app_text_styles.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_header.dart';
 import 'operations/widgets/bmkg_alert_detail_sheet.dart';
-import 'operations/widgets/bmkg_playtest_dialog.dart';
 import 'operations/widgets/disaster_history_tile.dart';
 import 'operations/widgets/disaster_summary_tiles.dart';
 import 'operations/widgets/executive_alert_card.dart';
@@ -111,14 +110,18 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             ),
 
             // Filter Tabs Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Riwayat Gempa Terkini',
                   style: AppTextStyles.sectionTitle,
                 ),
-                _buildFilterChips(),
+                const SizedBox(height: AppSpacing.xs),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _buildFilterChips(),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -183,32 +186,14 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Riwayat & Peringatan', style: AppTextStyles.screenTitle),
-              const SizedBox(height: 2),
-              Text(
-                'Feed resmi BMKG TEWS & catatan aktivitas kegempaan',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        IconButton.filledTonal(
-          icon: const Icon(
-            Icons.warning_amber_rounded,
-            size: 20,
-            color: AppColors.chartRed,
-          ),
-          tooltip: 'Uji Sirine & Simulasi BMKG',
-          onPressed: () => BmkgPlaytestDialog.show(context),
+        Text('Riwayat & Peringatan', style: AppTextStyles.screenTitle),
+        const SizedBox(height: 2),
+        Text(
+          'Feed resmi BMKG TEWS & catatan aktivitas kegempaan',
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
         ),
       ],
     );

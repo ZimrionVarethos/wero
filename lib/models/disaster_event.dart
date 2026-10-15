@@ -29,12 +29,20 @@ final class DisasterEvent {
   bool get isWaspada => severity == 'WASPADA';
 
   factory DisasterEvent.fromJson(Map<String, dynamic> json) {
+    final rawSeverity = ((json['severity'] as String?) ?? 'INFO').toUpperCase();
+    final normalizedSeverity = switch (rawSeverity) {
+      'CRITICAL' || 'AWAS' => 'AWAS',
+      'WARNING' || 'SIAGA' => 'SIAGA',
+      'ADVISORY' || 'WASPADA' => 'WASPADA',
+      _ => 'INFO',
+    };
+
     return DisasterEvent(
       id: json['id'] as String,
       source: (json['source'] as String?) ?? 'BMKG',
       sourceEventId: (json['source_event_id'] as String?) ?? '',
       disasterType: (json['disaster_type'] as String?) ?? 'Peringatan',
-      severity: (json['severity'] as String?) ?? 'INFO',
+      severity: normalizedSeverity,
       magnitude: (json['magnitude'] as num?)?.toDouble(),
       depthKm: (json['depth_km'] as num?)?.toDouble(),
       headline: (json['headline'] as String?) ?? '',

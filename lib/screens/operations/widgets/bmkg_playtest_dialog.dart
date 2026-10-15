@@ -168,24 +168,23 @@ class _BmkgPlaytestDialogState extends ConsumerState<BmkgPlaytestDialog> {
   }
 
   Widget _buildScenarioChips() {
-    return Row(
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
       children: List.generate(_scenarios.length, (idx) {
         final isSelected = _selectedScenario == idx;
-        return Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.sm),
-          child: ChoiceChip(
-            label: Text(
-              idx == 0 ? 'Skenario Tsunami' : 'Skenario Gempa Darat',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
+        return ChoiceChip(
+          label: Text(
+            idx == 0 ? 'Skenario Tsunami' : 'Skenario Gempa Darat',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
-            selected: isSelected,
-            onSelected: (val) {
-              if (val) setState(() => _selectedScenario = idx);
-            },
           ),
+          selected: isSelected,
+          onSelected: (val) {
+            if (val) setState(() => _selectedScenario = idx);
+          },
         );
       }),
     );

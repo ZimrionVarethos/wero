@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wero/models/bmkg_quake.dart';
+import 'package:wero/models/disaster_event.dart';
 import 'package:wero/screens/operations/widgets/bmkg_alert_detail_sheet.dart';
 import 'package:wero/screens/operations/widgets/bmkg_live_warning_card.dart';
 import 'package:wero/screens/operations/widgets/bmkg_playtest_dialog.dart';
 import 'package:wero/screens/operations/widgets/playtest_scenario_card.dart';
 import 'package:wero/screens/operations/widgets/quake_safety_protocol_box.dart';
 import 'package:wero/theme/app_colors.dart';
+import 'package:wero/widgets/emergency_alert_overlay.dart';
 
 void main() {
   group('Phase 9 BmkgQuake Model Tests', () {
@@ -183,9 +185,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(body: BmkgPlaytestDialog()),
-          ),
+          child: MaterialApp(home: Scaffold(body: BmkgPlaytestDialog())),
         ),
       );
 
@@ -202,5 +202,43 @@ void main() {
       expect(find.text('Gempa Darat Sesar Aktif M 6.2'), findsOneWidget);
       expect(find.text('WASPADA GEMPA KUAT'), findsOneWidget);
     });
+
+    testWidgets(
+      'EmergencyAlertOverlay renders official broadcast and triggers dismiss',
+      (tester) async {
+        bool dismissed = false;
+        const event = DisasterEvent(
+          id: 'ev-1',
+          source: 'PUSKODALOPS BPBD DIY',
+          sourceEventId: 'MANUAL-1',
+          disasterType: 'GEMPA BUMI',
+          severity: 'AWAS',
+          headline: 'Gempa Megathrust M 7.4 Berpotensi Tsunami',
+          magnitude: 7.4,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: EmergencyAlertOverlay(
+                event: event,
+                onDismiss: () => dismissed = true,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('SIARAN DARURAT RESMI'), findsOneWidget);
+        expect(find.text('PUSKODALOPS BPBD DIY'), findsOneWidget);
+        expect(
+          find.text('Gempa Megathrust M 7.4 Berpotensi Tsunami'),
+          findsOneWidget,
+        );
+        expect(find.text('HENTIKAN SIRINE & TETAP SIAGA'), findsOneWidget);
+
+        await tester.tap(find.text('HENTIKAN SIRINE & TETAP SIAGA'));
+        expect(dismissed, isTrue);
+      },
+    );
   });
 }
