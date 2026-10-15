@@ -128,6 +128,28 @@ class EmergencyAlertOverlay extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (event.targetRegions.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.sm),
+                      child: Row(
+                        children: [
+                          Icon(Icons.location_on, size: 14, color: alertColor),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Wilayah: ${event.targetRegions.join(', ')}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: alertColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     'Peringatan ini disiarkan secara langsung dari Pusat Pengendalian Operasi Penanggulangan Bencana.',

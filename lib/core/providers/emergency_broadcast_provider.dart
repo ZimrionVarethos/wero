@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/disaster_event.dart';
+import 'auth_providers.dart';
 import 'bmkg_providers.dart';
 import 'supabase_providers.dart';
 
@@ -85,6 +86,12 @@ class ActiveBroadcastNotifier extends Notifier<DisasterEvent?> {
   void _onNewBroadcastReceived(DisasterEvent event) {
     if (_dismissedIds.contains(event.id)) return;
     if (state?.id == event.id) return;
+
+    // Filter by regional target
+    final profile = ref.read(userProfileProvider).asData?.value;
+    if (!event.isTargetedFor(profile)) {
+      return;
+    }
 
     state = event;
     ref.read(alarmSoundServiceProvider).startEmergencyAlarm();

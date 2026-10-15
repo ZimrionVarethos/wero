@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Radio,
   Send,
-  AlertTriangle,
   RefreshCw,
   Clock,
   ExternalLink,
   MapPin,
   Waves,
   CheckCircle,
+  AlertCircle,
+  Globe,
+  Search,
+  Check,
 } from 'lucide-react';
 
 interface DisasterEventRow {
@@ -25,6 +28,20 @@ interface DisasterEventRow {
   occurred_at: string;
   created_at?: string;
   is_published: boolean;
+  region_id?: string | null;
+  source_payload?: {
+    target_type?: 'ALL' | 'SPECIFIC';
+    target_region_ids?: string[];
+    target_regions?: string[];
+    broadcasted_by?: string;
+  } | null;
+}
+
+interface RegionOption {
+  id: string;
+  name: string;
+  code: string;
+  level: string;
 }
 
 interface BmkgLatestQuake {
@@ -42,15 +59,21 @@ interface BmkgLatestQuake {
 export default function BroadcastManager() {
   const [events, setEvents] = useState<DisasterEventRow[]>([]);
   const [bmkgQuake, setBmkgQuake] = useState<BmkgLatestQuake | null>(null);
+  const [availableRegions, setAvailableRegions] = useState<RegionOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [broadcasting, setBroadcasting] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; isError?: boolean } | null>(null);
+
+  // Target Region State
+  const [targetType, setTargetType] = useState<'ALL' | 'SPECIFIC'>('ALL');
+  const [selectedRegionIds, setSelectedRegionIds] = useState<string[]>([]);
+  const [regionSearch, setRegionSearch] = useState('');
 
   // Form State
   const [formData, setFormData] = useState({
     headline: '',
     disaster_type: 'EARTHQUAKE',
-    severity: 'WARNING',
+    severity: 'SIAGA',
     magnitude: '',
     depth_km: '',
     source: 'PUSKODALOPS BPBD DIY',
@@ -67,7 +90,14 @@ export default function BroadcastManager() {
         setEvents(json.data || []);
       }
 
-      // 2. Fetch live BMKG feed
+      // 2. Fetch available regions
+      const regRes = await fetch('/api/regions');
+      const regJson = await regRes.json();
+      if (regJson.success) {
+        setAvailableRegions(regJson.data || []);
+      }
+
+      // 3. Fetch live BMKG feed
       const bmkgRes = await fetch('https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json');
       if (bmkgRes.ok) {
         const bmkgData = await bmkgRes.json();
@@ -86,34 +116,92 @@ export default function BroadcastManager() {
     fetchData();
   }, [fetchData]);
 
+  const filteredRegions = useMemo(() => {
+    if (!regionSearch.trim()) return availableRegions;
+    const q = regionSearch.toLowerCase();
+    return availableRegions.filter(
+      (r) => r.name.toLowerCase().includes(q) || r.code.includes(q)
+    );
+  }, [availableRegions, regionSearch]);
+
+  const toggleRegion = (id: string) => {
+    setSelectedRegionIds((prev) =>
+      prev.includes(id) ? prev.filter((rId) => rId !== id) : [...prev, id]
+    );
+  };
+
   const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.headline.trim()) return;
+    if (!formData.headline.trim()) {
+      setToast({ message: 'Judul peringatan (headline) wajib diisi', isError: true });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+
+    if (targetType === 'SPECIFIC' && selectedRegionIds.length === 0) {
+      setToast({
+        message: 'Silakan pilih minimal 1 daerah sasaran siaran darurat',
+        isError: true,
+      });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
 
     setBroadcasting(true);
     try {
+      const selectedRegionNames = availableRegions
+        .filter((r) => selectedRegionIds.includes(r.id))
+        .map((r) => r.name);
+
+      const payload = {
+        ...formData,
+        target_type: targetType,
+        target_region_ids: targetType === 'SPECIFIC' ? selectedRegionIds : [],
+        target_regions: targetType === 'SPECIFIC' ? selectedRegionNames : [],
+      };
+
       const res = await fetch('/api/broadcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (json.success) {
-        setToast('Peringatan darurat berhasil disiarkan ke seluruh aplikasi warga');
-        setTimeout(() => setToast(null), 4000);
+        const targetDesc =
+          targetType === 'ALL'
+            ? 'seluruh daerah (Nasional)'
+            : `${selectedRegionNames.length} daerah terpilih`;
+        setToast({
+          message: `Peringatan darurat berhasil disiarkan ke ${targetDesc}`,
+          isError: false,
+        });
+        setTimeout(() => setToast(null), 5000);
         setFormData({
           headline: '',
           disaster_type: 'EARTHQUAKE',
-          severity: 'WARNING',
+          severity: 'SIAGA',
           magnitude: '',
           depth_km: '',
           source: 'PUSKODALOPS BPBD DIY',
           source_url: '',
         });
+        setSelectedRegionIds([]);
+        setTargetType('ALL');
         fetchData();
+      } else {
+        setToast({
+          message: `Gagal menyiarkan: ${json.error || 'Terjadi kesalahan sistem'}`,
+          isError: true,
+        });
+        setTimeout(() => setToast(null), 5000);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setToast({
+        message: `Terjadi kendala jaringan: ${err.message || 'Gagal menghubungi server'}`,
+        isError: true,
+      });
+      setTimeout(() => setToast(null), 5000);
     } finally {
       setBroadcasting(false);
     }
@@ -123,9 +211,19 @@ export default function BroadcastManager() {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center gap-2 bg-emerald-900 text-white border-emerald-700 animate-fade-in">
-          <CheckCircle className="w-4 h-4 text-emerald-400" />
-          {toast}
+        <div
+          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center gap-2 animate-fade-in ${
+            toast.isError
+              ? 'bg-rose-900 text-white border-rose-700'
+              : 'bg-emerald-900 text-white border-emerald-700'
+          }`}
+        >
+          {toast.isError ? (
+            <AlertCircle className="w-4 h-4 text-rose-300" />
+          ) : (
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
+          )}
+          {toast.message}
         </div>
       )}
 
@@ -136,7 +234,7 @@ export default function BroadcastManager() {
             <Radio className="w-5 h-5 text-rose-500 animate-pulse" /> Peringatan Dini & Broadcast Evakuasi Darurat
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Pantau feed BMKG resmi secara live dan siarkan pengumuman darurat resmi ke seluruh ponsel warga.
+            Pantau feed BMKG resmi secara live dan siarkan pengumuman darurat resmi ke ponsel warga.
           </p>
         </div>
         <button
@@ -144,29 +242,25 @@ export default function BroadcastManager() {
           disabled={loading}
           className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Muat Ulang Feed
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          Segarkan Data
         </button>
       </div>
 
-      {/* BMKG Live Feed Banner */}
+      {/* BMKG Live Autogempa Feed Banner */}
       {bmkgQuake && (
-        <div className="bg-gradient-to-r from-amber-500 to-rose-600 text-white p-5 rounded-2xl shadow-md">
-          <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/20">
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-bold uppercase tracking-wider backdrop-blur-xs">
-                BMKG Live Auto-Gempa
-              </span>
-              <span className="text-xs text-white/80">
-                {bmkgQuake.Tanggal} • {bmkgQuake.Jam}
-              </span>
-            </div>
+        <div className="bg-gradient-to-r from-amber-600 via-rose-600 to-rose-700 text-white p-5 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider bg-black/25 px-2.5 py-1 rounded-full">
+              Pusat Gempa Terkini (BMKG Real-time)
+            </span>
             <a
-              href="https://data.bmkg.go.id/"
+              href="https://data.bmkg.go.id"
               target="_blank"
-              rel="noreferrer"
-              className="text-xs font-semibold hover:underline flex items-center gap-1 text-white/90"
+              rel="noopener noreferrer"
+              className="text-[11px] underline flex items-center gap-1 opacity-90 hover:opacity-100"
             >
-              Open Data BMKG <ExternalLink className="w-3 h-3" />
+              Sumber: BMKG Indonesia <ExternalLink className="w-3 h-3" />
             </a>
           </div>
 
@@ -202,7 +296,7 @@ export default function BroadcastManager() {
             <Send className="w-4 h-4 text-sky-600" /> Siarkan Peringatan Darurat Baru
           </h3>
           <p className="text-xs text-slate-500 mb-4">
-            Pengumuman ini akan langsung muncul di banner atas aplikasi mobile Siagaku.
+            Pengumuman ini akan memicu pop-up overlay darurat, suara sirine, dan getaran di ponsel warga.
           </p>
 
           <form onSubmit={handleBroadcast} className="space-y-4">
@@ -220,6 +314,105 @@ export default function BroadcastManager() {
               />
             </div>
 
+            {/* Target Daerah / Wilayah Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Sasaran Wilayah Penerima Siaran
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTargetType('ALL')}
+                  className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                    targetType === 'ALL'
+                      ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-xs'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  Semua Daerah (Nasional)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTargetType('SPECIFIC')}
+                  className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                    targetType === 'SPECIFIC'
+                      ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-xs'
+                      : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  Pilih Daerah Tertentu ({selectedRegionIds.length})
+                </button>
+              </div>
+
+              {targetType === 'SPECIFIC' && (
+                <div className="mt-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2.5 animate-fade-in">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="relative flex-1">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Cari kota / kabupaten..."
+                        value={regionSearch}
+                        onChange={(e) => setRegionSearch(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:border-rose-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRegionIds(availableRegions.map((r) => r.id))}
+                        className="px-2 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded"
+                      >
+                        Pilih Semua
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRegionIds([])}
+                        className="px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-200/60 rounded"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Multi-Select Badges */}
+                  <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-1">
+                    {filteredRegions.length === 0 ? (
+                      <div className="text-[11px] text-slate-400 py-1">Tidak ada daerah yang cocok.</div>
+                    ) : (
+                      filteredRegions.map((reg) => {
+                        const isSelected = selectedRegionIds.includes(reg.id);
+                        return (
+                          <button
+                            key={reg.id}
+                            type="button"
+                            onClick={() => toggleRegion(reg.id)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center gap-1.5 transition ${
+                              isSelected
+                                ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                            }`}
+                          >
+                            {isSelected ? <Check className="w-3 h-3 stroke-[3]" /> : null}
+                            {reg.name}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                  {selectedRegionIds.length > 0 && (
+                    <div className="text-[11px] text-rose-600 font-semibold flex items-center gap-1 pt-1">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      {selectedRegionIds.length} daerah terpilih akan menerima sirine & getaran.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -230,9 +423,10 @@ export default function BroadcastManager() {
                   onChange={(e) => setFormData({ ...formData, severity: e.target.value })}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white"
                 >
-                  <option value="WARNING">SIAGA (Warning)</option>
-                  <option value="DANGER">AWAS (Critical / Danger)</option>
-                  <option value="INFO">WASPADA / INFO</option>
+                  <option value="SIAGA">SIAGA (Warning / Siaga)</option>
+                  <option value="AWAS">AWAS (Critical / Bahaya Tinggi)</option>
+                  <option value="WASPADA">WASPADA (Advisory / Waspada)</option>
+                  <option value="INFO">INFO (Informasi / Edukasi)</option>
                 </select>
               </div>
 
@@ -322,9 +516,9 @@ export default function BroadcastManager() {
                   <div className="flex items-center gap-2">
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        ev.severity === 'DANGER'
+                        ev.severity === 'AWAS' || ev.severity === 'DANGER'
                           ? 'bg-rose-100 text-rose-800'
-                          : ev.severity === 'WARNING'
+                          : ev.severity === 'SIAGA' || ev.severity === 'WARNING'
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-sky-100 text-sky-800'
                       }`}
@@ -340,7 +534,25 @@ export default function BroadcastManager() {
                     </span>
                   </div>
                   <h4 className="font-bold text-sm text-slate-900 leading-snug">{ev.headline}</h4>
-                  <div className="text-xs text-slate-500">
+
+                  {/* Target Region Badge in History */}
+                  <div className="flex items-center gap-1 text-[11px] text-slate-600 pt-0.5">
+                    {ev.source_payload?.target_type === 'SPECIFIC' &&
+                    ev.source_payload?.target_regions &&
+                    ev.source_payload.target_regions.length > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-semibold border border-rose-100">
+                        <MapPin className="w-3 h-3" />
+                        {ev.source_payload.target_regions.join(', ')}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100">
+                        <Globe className="w-3 h-3" />
+                        Semua Daerah (Nasional)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-xs text-slate-500 pt-0.5">
                     Sumber: <span className="font-medium text-slate-700">{ev.source}</span>
                     {ev.magnitude && <span className="ml-2 font-mono font-bold text-rose-600">• M {ev.magnitude}</span>}
                   </div>
