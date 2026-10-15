@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/disaster_event.dart';
+import '../../models/user_profile.dart';
 import 'auth_providers.dart';
 import 'bmkg_providers.dart';
 import 'supabase_providers.dart';
@@ -83,12 +84,18 @@ class ActiveBroadcastNotifier extends Notifier<DisasterEvent?> {
     } catch (_) {}
   }
 
-  void _onNewBroadcastReceived(DisasterEvent event) {
+  Future<void> _onNewBroadcastReceived(DisasterEvent event) async {
     if (_dismissedIds.contains(event.id)) return;
     if (state?.id == event.id) return;
 
     // Filter by regional target
-    final profile = ref.read(userProfileProvider).asData?.value;
+    UserProfile? profile = ref.read(userProfileProvider).asData?.value;
+    if (profile == null) {
+      try {
+        profile = await ref.read(userProfileProvider.future);
+      } catch (_) {}
+    }
+
     if (!event.isTargetedFor(profile)) {
       return;
     }

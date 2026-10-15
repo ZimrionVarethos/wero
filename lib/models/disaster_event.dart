@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:wero/models/user_profile.dart';
 
 /// Disaster event alert model corresponding to public.disaster_events.
@@ -39,24 +41,65 @@ final class DisasterEvent {
   bool get isWaspada => severity == 'WASPADA';
 
   bool isTargetedFor(UserProfile? profile) {
-    if (targetType == 'ALL' ||
-        (targetRegionIds.isEmpty && targetRegions.isEmpty && regionId == null)) {
+    // 1. National broadcasts target every citizen.
+    if (targetType == 'ALL') {
       return true;
     }
-    if (profile == null) return true;
-    if (regionId != null && profile.regionId == regionId) return true;
-    if (profile.regionId != null && targetRegionIds.contains(profile.regionId)) {
+
+    // 2. If marked SPECIFIC but no regions configured, fallback to true.
+    final hasTargets = targetRegionIds.isNotEmpty ||
+        targetRegions.isNotEmpty ||
+        (regionId != null && regionId!.isNotEmpty);
+    if (!hasTargets) {
       return true;
     }
-    if (profile.regionName != null) {
+
+    // 3. For specific regional broadcasts, if user has no profile or no region,
+    // do not trigger siren/vibration for another region.
+    if (profile == null) {
+      return false;
+    }
+
+    // 4. Match by region ID
+    if (profile.regionId != null && profile.regionId!.isNotEmpty) {
+      if (regionId != null && profile.regionId == regionId) {
+        return true;
+      }
+      if (targetRegionIds.contains(profile.regionId)) {
+        return true;
+      }
+    }
+
+    // 5. Match by region name (with city/regency normalization)
+    if (profile.regionName != null && profile.regionName!.trim().isNotEmpty) {
       final userReg = profile.regionName!.trim().toLowerCase();
+      final userRegClean = userReg
+          .replaceAll('kota', '')
+          .replaceAll('kabupaten', '')
+          .replaceAll('kab.', '')
+          .trim();
+
       for (final tr in targetRegions) {
         final t = tr.trim().toLowerCase();
-        if (t == userReg || userReg.contains(t) || t.contains(userReg)) {
+        final tClean = t
+            .replaceAll('kota', '')
+            .replaceAll('kabupaten', '')
+            .replaceAll('kab.', '')
+            .trim();
+
+        if (t == userReg ||
+            userReg.contains(t) ||
+            t.contains(userReg) ||
+            (userRegClean.isNotEmpty &&
+                tClean.isNotEmpty &&
+                (userRegClean == tClean ||
+                    userReg.contains(tClean) ||
+                    t.contains(userRegClean)))) {
           return true;
         }
       }
     }
+
     return false;
   }
 
@@ -69,22 +112,44 @@ final class DisasterEvent {
       _ => 'INFO',
     };
 
-    final payload = json['source_payload'] is Map<String, dynamic>
-        ? json['source_payload'] as Map<String, dynamic>
-        : <String, dynamic>{};
+    Map<String, dynamic> payload = {};
+    final rawPayload = json['source_payload'];
+    if (rawPayload is Map<String, dynamic>) {
+      payload = rawPayload;
+    } else if (rawPayload is Map) {
+      payload = Map<String, dynamic>.from(rawPayload);
+    } else if (rawPayload is String && rawPayload.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawPayload);
+        if (decoded is Map<String, dynamic>) {
+          payload = decoded;
+        } else if (decoded is Map) {
+          payload = Map<String, dynamic>.from(decoded);
+        }
+      } catch (_) {}
+    }
 
     final targetType = (payload['target_type'] as String?) ??
         (json['region_id'] != null ? 'SPECIFIC' : 'ALL');
 
     final targetRegionIds = (payload['target_region_ids'] as List?)
-            ?.map((e) => e.toString())
+            ?.map((e) => e.toString().trim())
+            .where((s) => s.isNotEmpty)
             .toList() ??
         <String>[];
 
     final targetRegions = (payload['target_regions'] as List?)
-            ?.map((e) => e.toString())
+            ?.map((e) => e.toString().trim())
+            .where((s) => s.isNotEmpty)
             .toList() ??
         <String>[];
+
+    final mainRegId = json['region_id'] as String?;
+    if (mainRegId != null &&
+        mainRegId.isNotEmpty &&
+        !targetRegionIds.contains(mainRegId)) {
+      targetRegionIds.add(mainRegId);
+    }
 
     return DisasterEvent(
       id: json['id'] as String,
@@ -99,7 +164,7 @@ final class DisasterEvent {
           ? DateTime.tryParse(json['occurred_at'] as String)
           : null,
       sourceUrl: json['source_url'] as String?,
-      regionId: json['region_id'] as String?,
+      regionId: mainRegId,
       targetType: targetType,
       targetRegionIds: targetRegionIds,
       targetRegions: targetRegions,
