@@ -38,33 +38,45 @@ class FcmNotificationService {
 
       final messaging = FirebaseMessaging.instance;
 
+      // Enable foreground heads-up notifications presentation
+      try {
+        await messaging.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      } catch (_) {}
+
       // Request notification permissions (crucial for Android 13+ and iOS)
-      final settings = await messaging.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-        provisional: false,
-      );
+      try {
+        await messaging.requestPermission(
+          alert: true,
+          badge: true,
+          sound: true,
+          provisional: false,
+        );
+      } catch (_) {}
 
-      if (settings.authorizationStatus == AuthorizationStatus.authorized ||
-          settings.authorizationStatus == AuthorizationStatus.provisional) {
-        // Listen to registration events (modern replacement in firebase_messaging v17)
-        messaging.onRegistered.listen((token) async {
-          _cachedToken = token;
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(_prefKeyFcmToken, token);
-          if (kDebugMode) {
-            // ignore: avoid_print
-            print('[FCM] Device token registered: $token');
-          }
-        });
+      // Listen to registration events (modern replacement in firebase_messaging v17)
+      messaging.onRegistered.listen((token) async {
+        _cachedToken = token;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_prefKeyFcmToken, token);
+        if (kDebugMode) {
+          // ignore: avoid_print
+          print('[FCM] Device token registered: $token');
+        }
+      });
 
-        // Register the app instance with Firebase Cloud Messaging
+      // Register the app instance with Firebase Cloud Messaging
+      try {
         await messaging.register();
+      } catch (_) {}
 
-        // Subscribe to national broadcasts by default
+      // Subscribe to national broadcasts by default
+      try {
         await messaging.subscribeToTopic('nasional');
-      }
+      } catch (_) {}
     } catch (e) {
       if (kDebugMode) {
         // ignore: avoid_print
