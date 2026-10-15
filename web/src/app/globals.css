@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
+/* Token brand Siagaku, lihat siagaku_design_skills/SKILL.md */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --navy: #12263f;
+  --accent: #e8590c;
+  --cream: #f4f2ee;
+  --surface: #ffffff;
+  --border: #d9d5cd;
+  --text: #1a1d21;
+  --muted: #5f6b76;
+
+  --status-awas: #c62828;
+  --status-siaga: #e65100;
+  --status-waspada: #f9a825;
+  --status-aman: #2e7d32;
+  --status-info: #1565c0;
+
+  --background: var(--cream);
+  --foreground: var(--text);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-navy: var(--navy);
+  --color-accent: var(--accent);
+  --color-cream: var(--cream);
+  --color-border-neutral: var(--border);
+  --color-muted: var(--muted);
+  --color-awas: var(--status-awas);
+  --color-siaga: var(--status-siaga);
+  --color-waspada: var(--status-waspada);
+  --color-aman: var(--status-aman);
+  --color-info: var(--status-info);
+  --font-sans: var(--font-jakarta), Inter, ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -14,16 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Siagaku / Wero — Portal Operasi Darurat & Admin Bencana",
+  title: "Siagaku | Kesiapsiagaan Bencana di Genggaman",
   description:
-    "Pusat komando dan kendali operasi tanggap darurat, manajemen posko shelter evakuasi, monitoring panggilan SOS, dan moderasi komunitas bencana.",
+    "Siagaku membantu warga menerima peringatan bencana sesuai lokasi, membuka peta evakuasi offline, meminta bantuan SOS, dan mempelajari panduan kebencanaan.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="id"
+      className={`${jakarta.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
