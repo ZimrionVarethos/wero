@@ -74,7 +74,7 @@ final activeSosProvider = AsyncNotifierProvider<ActiveSosNotifier, SosEvent?>(
 /// Provider fetching recent official disaster warnings.
 final disasterEventsProvider = FutureProvider<List<DisasterEvent>>((ref) async {
   final service = ref.watch(operationsServiceProvider);
-  return service.fetchDisasterEvents(limit: 5);
+  return service.fetchDisasterEvents(limit: 20);
 });
 
 /// State for evacuation points filter and search.

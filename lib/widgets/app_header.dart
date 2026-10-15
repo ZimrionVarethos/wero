@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/emergency_broadcast_provider.dart';
+import '../core/providers/operations_providers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'notification_log_sheet.dart';
 
-/// Reusable top app bar used by ActivityScreen and StatisticsScreen.
+/// Reusable top app bar used across main application screens.
 ///
-/// Shows a back button on the left and a menu icon on the right.
-/// The menu callback ([onMenuPressed]) opens a drawer or placeholder.
+/// Shows an optional back button on the left and a notification log button on the right.
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({super.key, this.onMenuPressed, this.showBackButton = true});
 
@@ -26,7 +29,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
           ? IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
               color: AppColors.textPrimary,
-              tooltip: 'Back',
+              tooltip: 'Kembali',
               onPressed: () {
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
@@ -35,57 +38,56 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             )
           : null,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.grid_view_rounded, size: 22),
-          color: AppColors.textPrimary,
-          tooltip: 'Menu',
-          onPressed: onMenuPressed ?? () => _showPlaceholderMenu(context),
+        Consumer(
+          builder: (context, ref, _) {
+            final activeAlert = ref.watch(activeBroadcastAlertProvider);
+            final eventsCount =
+                ref.watch(disasterEventsProvider).asData?.value.length ?? 0;
+            final hasAlert = activeAlert != null || eventsCount > 0;
+
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    activeAlert != null
+                        ? Icons.notifications_active_rounded
+                        : Icons.notifications_outlined,
+                    size: 24,
+                  ),
+                  color: activeAlert != null
+                      ? AppColors.chartRed
+                      : AppColors.textPrimary,
+                  tooltip: 'Log Notifikasi & Siaran',
+                  onPressed: onMenuPressed ??
+                      () => NotificationLogSheet.show(context),
+                ),
+                if (hasAlert)
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: activeAlert != null
+                            ? AppColors.chartRed
+                            : AppColors.chartBlue,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.surface,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         const SizedBox(width: AppSpacing.sm),
       ],
     );
   }
-
-  void _showPlaceholderMenu(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppRadius.card),
-        ),
-      ),
-      builder: (_) => const _PlaceholderMenuSheet(),
-    );
-  }
 }
 
-class _PlaceholderMenuSheet extends StatelessWidget {
-  const _PlaceholderMenuSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Menu',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.base),
-          Text(
-            'Additional navigation will appear here in a future release.',
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
-    );
-  }
-}

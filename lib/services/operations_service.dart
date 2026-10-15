@@ -125,7 +125,7 @@ class OperationsService {
       var query = client
           .from('disaster_events')
           .select(
-            'id, source, source_event_id, disaster_type, severity, magnitude, depth_km, headline, occurred_at, source_url',
+            'id, source, source_event_id, disaster_type, severity, magnitude, depth_km, headline, occurred_at, source_url, region_id, source_payload',
           )
           .eq('is_published', true);
 
