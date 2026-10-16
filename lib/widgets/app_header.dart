@@ -20,16 +20,20 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
     this.title,
+    this.titleWidget,
     this.onMenuPressed,
     this.showBackButton = true,
     this.actions,
+    this.prefixActions,
     this.bottom,
   });
 
   final String? title;
+  final Widget? titleWidget;
   final VoidCallback? onMenuPressed;
   final bool showBackButton;
   final List<Widget>? actions;
+  final List<Widget>? prefixActions;
   final PreferredSizeWidget? bottom;
 
   @override
@@ -49,22 +53,24 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       bottom: bottom,
       titleSpacing: showBackButton ? 0 : AppSpacing.base,
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const AppLogo(height: 26),
-          if (title != null) ...[
-            const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              child: Text(
-                title!,
-                style: AppTextStyles.screenTitle.copyWith(fontSize: 16),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ],
-      ),
+      title:
+          titleWidget ??
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppLogo(height: 26),
+              if (title != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Flexible(
+                  child: Text(
+                    title!,
+                    style: AppTextStyles.screenTitle.copyWith(fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
       leading: showBackButton
           ? IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -80,6 +86,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
       actions:
           actions ??
           [
+            ...?prefixActions,
             // 1. History (Riwayat Bencana & BMKG)
             IconButton(
               icon: const Icon(Icons.history_rounded, size: 22),

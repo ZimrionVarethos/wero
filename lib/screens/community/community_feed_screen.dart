@@ -9,13 +9,13 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_bottom_navigation.dart';
-import '../../widgets/app_logo.dart';
-import 'widgets/category_filter_bar.dart';
+import '../../widgets/app_header.dart';
+import '../../widgets/contour_wave_background.dart';
+import 'widgets/community_filter_sheet.dart';
 import 'widgets/empty_region_prompt.dart';
 import 'widgets/post_card.dart';
-import 'widgets/scope_selector.dart';
 
-/// Community Feed screen supporting Local & National feeds, search, and filtering.
+/// Community Feed screen supporting Local & National feeds, search, and filtering via popup.
 class CommunityFeedScreen extends ConsumerStatefulWidget {
   const CommunityFeedScreen({super.key});
 
@@ -51,33 +51,34 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(communityFeedProvider);
-    final categoriesAsync = ref.watch(communityCategoriesProvider);
     final profile = ref.watch(userProfileProvider).asData?.value;
+    final hasActiveFilter =
+        state.selectedCategoryId != null || state.scope != 'LOCAL';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(state.scope),
-            _buildSearchBar(),
-            categoriesAsync.when(
-              data: (cats) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: CategoryFilterBar(
-                  categories: cats,
-                  selectedCategoryId: state.selectedCategoryId,
-                  onSelectCategory: (id) =>
-                      ref.read(communityFeedProvider.notifier).setCategory(id),
-                ),
-              ),
-              loading: () => const SizedBox(height: 40),
-              error: (_, _) => const SizedBox.shrink(),
+      appBar: AppHeader(
+        showBackButton: false,
+        prefixActions: [_buildFilterButton(hasActiveFilter)],
+      ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: ContourWaveBackground(variant: ContourVariant.community),
             ),
-            if (state.isOffline) _buildOfflineBanner(),
-            Expanded(child: _buildBody(state, profile?.regionId)),
-          ],
-        ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildSearchBar(),
+                if (state.isOffline) _buildOfflineBanner(),
+                Expanded(child: _buildBody(state, profile?.regionId)),
+              ],
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/community/create'),
@@ -92,38 +93,31 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
     );
   }
 
-  Widget _buildTopBar(String currentScope) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pagePadding,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const AppLogo(height: 28),
-              const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                icon: const Icon(
-                  Icons.shield_outlined,
-                  size: 20,
-                  color: AppColors.chartBlue,
-                ),
-                tooltip: 'Moderasi Komunitas',
-                onPressed: () => context.push(AppRoutes.moderation),
+  Widget _buildFilterButton(bool hasActiveFilter) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.tune_rounded, size: 22),
+          color: AppColors.primaryNavy,
+          tooltip: 'Filter Berita & Kategori',
+          onPressed: () => CommunityFilterSheet.show(context),
+        ),
+        if (hasActiveFilter)
+          Positioned(
+            top: 10,
+            right: 10,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: AppColors.accentOrange,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.surfaceWhite, width: 1.5),
               ),
-            ],
+            ),
           ),
-          ScopeSelector(
-            currentScope: currentScope,
-            onScopeChanged: (scope) =>
-                ref.read(communityFeedProvider.notifier).setScope(scope),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -136,20 +130,29 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
       child: Container(
         height: 44,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.surfaceWhite,
           borderRadius: BorderRadius.circular(AppRadius.button),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.borderNeutral),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryNavy.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: TextField(
           controller: _searchController,
           style: AppTextStyles.body.copyWith(fontSize: 13),
           decoration: InputDecoration(
             hintText: 'Cari topik kesiapsiagaan...',
-            hintStyle: AppTextStyles.caption,
+            hintStyle: AppTextStyles.caption.copyWith(
+              color: AppColors.mutedText,
+            ),
             prefixIcon: const Icon(
               Icons.search,
               size: 20,
-              color: AppColors.textSecondary,
+              color: AppColors.mutedText,
             ),
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
@@ -204,7 +207,7 @@ class _CommunityFeedScreenState extends ConsumerState<CommunityFeedScreen> {
 
     if (state.isLoading && state.posts.isEmpty) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.textPrimary),
+        child: CircularProgressIndicator(color: AppColors.primaryNavy),
       );
     }
 

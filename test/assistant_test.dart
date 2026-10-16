@@ -125,7 +125,7 @@ void main() {
     });
 
     testWidgets(
-      'ChatBubble renders assistant message with markdown and gemini avatar',
+      'ChatBubble renders assistant message with markdown and integrated AI logo',
       (tester) async {
         final aiMsg = ChatMessage(
           id: '2',
@@ -140,6 +140,7 @@ void main() {
           ),
         );
 
+        expect(find.text('Asisten Siaga AI'), findsOneWidget);
         expect(
           find.textContaining('Lindungi kepala dan leher'),
           findsOneWidget,
@@ -147,16 +148,24 @@ void main() {
       },
     );
 
-    testWidgets('AssistantScreen renders logo and quick prompts', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: AssistantScreen())),
-      );
+    testWidgets(
+      'AssistantScreen renders logo, 4 action icons, and quick prompts',
+      (tester) async {
+        await tester.pumpWidget(
+          const ProviderScope(child: MaterialApp(home: AssistantScreen())),
+        );
 
-      expect(find.byType(AppLogo), findsOneWidget);
-      expect(find.text('Apa yang harus dilakukan saat gempa?'), findsOneWidget);
-      expect(find.byType(TextField), findsOneWidget);
-    });
+        expect(find.byType(AppLogo), findsOneWidget);
+        expect(find.byIcon(Icons.restart_alt_rounded), findsOneWidget);
+        expect(find.byIcon(Icons.history_rounded), findsOneWidget);
+        expect(find.byIcon(Icons.map_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.notifications_rounded), findsOneWidget);
+        expect(
+          find.text('Apa yang harus dilakukan saat gempa?'),
+          findsOneWidget,
+        );
+        expect(find.byType(TextField), findsOneWidget);
+      },
+    );
   });
 }

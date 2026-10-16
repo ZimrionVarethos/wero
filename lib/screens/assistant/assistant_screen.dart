@@ -8,10 +8,10 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/app_bottom_navigation.dart';
-import '../../widgets/app_logo.dart';
+import '../../widgets/app_header.dart';
+import '../../widgets/contour_wave_background.dart';
 import 'widgets/chat_bubble.dart';
 import 'widgets/chat_input_bar.dart';
-import 'widgets/gemini_avatar.dart';
 import 'widgets/suggested_prompts.dart';
 
 /// Screen for conversational disaster assistance and offline survival advice.
@@ -68,69 +68,62 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            _buildDisclaimer(),
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                itemCount: state.messages.length + (state.isGenerating ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == state.messages.length) {
-                    return _buildTypingIndicator();
-                  }
-                  return ChatBubble(message: state.messages[index]);
-                },
-              ),
-            ),
-            SuggestedPrompts(
-              disabled: state.isGenerating,
-              onSelectPrompt: _sendMessage,
-            ),
-            ChatInputBar(
-              controller: _inputController,
-              isGenerating: state.isGenerating,
-              onSend: _sendMessage,
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: AppBottomNavigation(
-        currentIndex: 1,
-        onTap: _onBottomNavTap,
-      ),
-    );
-  }
-
-  Widget _buildTopBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pagePadding,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const AppLogo(height: 28),
-              const SizedBox(width: AppSpacing.sm),
-              const GeminiAvatar(size: 28, iconSize: 16),
-            ],
-          ),
+      appBar: AppHeader(
+        showBackButton: false,
+        prefixActions: [
           IconButton(
-            icon: const Icon(
-              Icons.restart_alt_rounded,
-              color: AppColors.textSecondary,
-            ),
+            icon: const Icon(Icons.restart_alt_rounded, size: 22),
+            color: AppColors.primaryNavy,
             tooltip: 'Mulai Ulang Percakapan',
             onPressed: () => ref.read(aiChatProvider.notifier).clearChat(),
           ),
         ],
+      ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: ContourWaveBackground(variant: ContourVariant.assistant),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildDisclaimer(),
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm,
+                    ),
+                    itemCount:
+                        state.messages.length + (state.isGenerating ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == state.messages.length) {
+                        return _buildTypingIndicator();
+                      }
+                      return ChatBubble(message: state.messages[index]);
+                    },
+                  ),
+                ),
+                SuggestedPrompts(
+                  disabled: state.isGenerating,
+                  onSelectPrompt: _sendMessage,
+                ),
+                ChatInputBar(
+                  controller: _inputController,
+                  isGenerating: state.isGenerating,
+                  onSend: _sendMessage,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: AppBottomNavigation(
+        currentIndex: 1,
+        onTap: _onBottomNavTap,
       ),
     );
   }
@@ -170,39 +163,53 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
         left: AppSpacing.pagePadding,
         bottom: AppSpacing.md,
       ),
-      child: Row(
-        children: [
-          const GeminiAvatar(size: 26, iconSize: 14),
-          const SizedBox(width: AppSpacing.xs),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.card),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.chartBlue,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  'Siaga AI sedang merumuskan langkah...',
-                  style: AppTextStyles.caption.copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceWhite,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(
+            color: AppColors.borderNeutral.withValues(alpha: 0.8),
           ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryNavy.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.asset(
+                'assets/images/icon.png',
+                width: 20,
+                height: 20,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            const SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primaryNavy,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs + 2),
+            Text(
+              'Siaga AI sedang merumuskan langkah...',
+              style: AppTextStyles.caption.copyWith(
+                fontStyle: FontStyle.italic,
+                color: AppColors.mutedText,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

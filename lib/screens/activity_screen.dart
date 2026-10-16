@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_header.dart';
+import '../widgets/contour_wave_background.dart';
 import 'activity/widgets/local_community_section.dart';
 import 'activity/widgets/quick_access_bar.dart';
 import 'operations/widgets/sos_active_card.dart';
@@ -59,70 +60,81 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
       appBar: AppHeader(showBackButton: Navigator.canPop(context)),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(recentLocalPostsProvider);
-          ref.invalidate(activeSosProvider);
-        },
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // Area hero atas dengan background putih dan lekukan melengkung
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceWhite,
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(AppRadius.heroCurve),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background garis kontur gelombang yang merata dari atas sampai bawah
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: ContourWaveBackground(variant: ContourVariant.home),
+            ),
+          ),
+          RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(recentLocalPostsProvider);
+              ref.invalidate(activeSosProvider);
+            },
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                // Area hero atas dengan background putih dan lekukan melengkung
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceWhite.withValues(alpha: 0.95),
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(AppRadius.heroCurve),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryNavy.withValues(alpha: 0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.sm,
+                    AppSpacing.pagePadding,
+                    AppSpacing.xxl + 8,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      activeSosAsync.when(
+                        data: (sos) => sos != null
+                            ? Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.md,
+                                ),
+                                child: SosActiveCard(event: sos),
+                              )
+                            : const SizedBox.shrink(),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
+                      ),
+                      const QuickAccessBar(),
+                    ],
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryNavy.withValues(alpha: 0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                // Konten komunitas di atas kanvas krem
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.lg,
+                    AppSpacing.pagePadding,
+                    80, // room for FAB
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.sm,
-                AppSpacing.pagePadding,
-                AppSpacing.xxl + 8,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  activeSosAsync.when(
-                    data: (sos) => sos != null
-                        ? Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.md,
-                            ),
-                            child: SosActiveCard(event: sos),
-                          )
-                        : const SizedBox.shrink(),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, _) => const SizedBox.shrink(),
+                  child: LocalCommunitySection(
+                    cityName: titleCity,
+                    postsAsync: recentPostsAsync,
                   ),
-                  const QuickAccessBar(),
-                ],
-              ),
+                ),
+              ],
             ),
-            // Konten komunitas di atas kanvas krem
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                80, // room for FAB
-              ),
-              child: LocalCommunitySection(
-                cityName: titleCity,
-                postsAsync: recentPostsAsync,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: const SosButton(),
       bottomNavigationBar: AppBottomNavigation(

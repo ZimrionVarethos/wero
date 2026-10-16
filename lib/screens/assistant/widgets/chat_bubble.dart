@@ -8,7 +8,6 @@ import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_styles.dart';
 
 import 'chat_markdown.dart';
-import 'gemini_avatar.dart';
 
 /// Chat bubble widget displaying either user query or assistant response.
 class ChatBubble extends StatelessWidget {
@@ -58,90 +57,106 @@ class ChatBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(
         left: AppSpacing.pagePadding,
-        right: 48,
+        right: 28,
         bottom: AppSpacing.md,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const GeminiAvatar(),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(AppRadius.card),
-                  bottomLeft: Radius.circular(AppRadius.card),
-                  bottomRight: Radius.circular(AppRadius.card),
-                ),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (message.isOfflineFallback)
-                    _buildOfflineBadge()
-                  else
-                    _buildGeminiBadge(),
-                  ChatMarkdown(data: message.text),
-                  if (message.suggestedActions.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    _buildActions(context),
-                  ],
-                ],
-              ),
-            ),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceWhite,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(
+            color: AppColors.borderNeutral.withValues(alpha: 0.8),
           ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryNavy.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Logo AI dan info status menyatu di pojok kiri atas kotak chat
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.asset(
+                    'assets/images/icon.png',
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs + 2),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        'Asisten Siaga AI',
+                        style: AppTextStyles.label.copyWith(
+                          color: AppColors.primaryNavy,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      if (message.isOfflineFallback)
+                        _buildOfflineBadge()
+                      else
+                        _buildGeminiBadge(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ChatMarkdown(data: message.text),
+            if (message.suggestedActions.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              _buildActions(context),
+            ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildGeminiBadge() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.auto_awesome, size: 13, color: AppColors.chartBlue),
-          const SizedBox(width: 4),
-          Text(
-            'Siaga AI (Terhubung Gemini)',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.chartBlue,
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-            ),
-          ),
-        ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.softBlue,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        'Online',
+        style: AppTextStyles.caption.copyWith(
+          color: AppColors.chartBlue,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+        ),
       ),
     );
   }
 
   Widget _buildOfflineBadge() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.offline_pin_outlined,
-            size: 14,
-            color: AppColors.chartBlue,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'Panduan Resmi BNPB (Tersimpan)',
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.chartBlue,
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-            ),
-          ),
-        ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.softGreen,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        'BNPB Offline',
+        style: AppTextStyles.caption.copyWith(
+          color: AppColors.siaga,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+        ),
       ),
     );
   }
