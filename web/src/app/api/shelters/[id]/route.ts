@@ -1,107 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
+import { writeAudit } from '@/lib/admin/audit';
+import { parseEvacInput } from '@/lib/admin/evac-input';
+import { EVAC_SCOPE_WHERE } from '@/lib/admin/scope';
+import { errorResponse, HttpError, isUuid, regionScope, requireAdmin } from '@/lib/admin/session';
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function PUT(req: NextRequest, { params }: Params) {
+  const client = await pool.connect();
   try {
+    const session = await requireAdmin();
+    const scope = regionScope(session);
     const { id } = await params;
-    const body = await req.json();
-    const {
-      name,
-      kind,
-      description,
-      address,
-      capacity,
-      latitude,
-      longitude,
-      is_active,
-      source,
-    } = body;
+    if (!isUuid(id)) throw new HttpError(400, 'ID titik tidak valid.');
+    const input = parseEvacInput(await req.json().catch(() => ({})), true);
 
-    const lat = latitude !== undefined ? parseFloat(latitude) : null;
-    const lng = longitude !== undefined ? parseFloat(longitude) : null;
-
-    let updateQuery = `
-      UPDATE public.evacuation_points
-      SET
-        name = COALESCE($1, name),
-        kind = COALESCE($2, kind),
-        description = COALESCE($3, description),
-        address = COALESCE($4, address),
-        capacity = COALESCE($5, capacity),
-        is_active = COALESCE($6, is_active),
-        source = COALESCE($7, source),
-        updated_at = NOW()
-    `;
-
-    const queryParams: unknown[] = [
-      name?.trim(),
-      kind,
-      description?.trim(),
-      address?.trim(),
-      capacity !== undefined ? parseInt(capacity, 10) : null,
-      is_active !== undefined ? Boolean(is_active) : null,
-      source?.trim(),
-    ];
-
-    if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
-      queryParams.push(lat, lng);
-      updateQuery += `,
-        geom = ST_SetSRID(ST_MakePoint($${queryParams.length}, $${queryParams.length - 1}), 4326)
-      `;
-    }
-
-    queryParams.push(id);
-    updateQuery += ` WHERE id = $${queryParams.length} RETURNING *`;
-
-    const result = await pool.query(updateQuery, queryParams);
-
-    if (result.rowCount === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Data shelter tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: result.rows[0] });
-  } catch (error: any) {
-    console.error('Failed to update shelter:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal memperbarui shelter' },
-      { status: 500 }
+    await client.query('BEGIN');
+    // A government admin editing an unassigned point takes it into their region.
+    const { rows } = await client.query(
+      `update public.evacuation_points e
+       set name = $3, kind = $4, description = $5, address = $6, capacity = $7,
+           geom = st_setsrid(st_makepoint($9, $8), 4326),
+           is_active = coalesce($10, e.is_active),
+           region_id = coalesce(e.region_id, $1::uuid),
+           updated_at = now()
+       where e.id = $2 and ${EVAC_SCOPE_WHERE}
+       returning e.id, e.name, e.kind, e.is_active`,
+      [scope, id, input.name, input.kind, input.description, input.address, input.capacity, input.lat, input.lng, input.isActive],
     );
+    if (!rows[0]) throw new HttpError(404, 'Titik evakuasi tidak ditemukan di wilayah Anda.');
+
+    await writeAudit(
+      {
+        actorId: session.userId,
+        action: 'EVAC_UPDATED',
+        targetType: 'EVACUATION_POINT',
+        targetId: id,
+        metadata: { name: rows[0].name, kind: rows[0].kind, is_active: rows[0].is_active },
+      },
+      client,
+    );
+    await client.query('COMMIT');
+    return NextResponse.json({ success: true, data: rows[0] });
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    return errorResponse(error, 'Gagal memperbarui titik evakuasi');
+  } finally {
+    client.release();
   }
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const client = await pool.connect();
   try {
+    const session = await requireAdmin();
+    const scope = regionScope(session);
     const { id } = await params;
-    const result = await pool.query(
-      `DELETE FROM public.evacuation_points WHERE id = $1 RETURNING id, name`,
-      [id]
-    );
+    if (!isUuid(id)) throw new HttpError(400, 'ID titik tidak valid.');
 
-    if (result.rowCount === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Data shelter tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: `Posko ${result.rows[0].name} berhasil dihapus`,
-    });
-  } catch (error: any) {
-    console.error('Failed to delete shelter:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal menghapus shelter' },
-      { status: 500 }
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      `delete from public.evacuation_points e
+       where e.id = $2 and ${EVAC_SCOPE_WHERE}
+       returning e.id, e.name, e.kind`,
+      [scope, id],
     );
+    if (!rows[0]) throw new HttpError(404, 'Titik evakuasi tidak ditemukan di wilayah Anda.');
+
+    await writeAudit(
+      {
+        actorId: session.userId,
+        action: 'EVAC_DELETED',
+        targetType: 'EVACUATION_POINT',
+        targetId: id,
+        metadata: { name: rows[0].name, kind: rows[0].kind },
+      },
+      client,
+    );
+    await client.query('COMMIT');
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    return errorResponse(error, 'Gagal menghapus titik evakuasi');
+  } finally {
+    client.release();
   }
 }

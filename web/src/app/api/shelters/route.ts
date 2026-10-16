@@ -1,102 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
+import { writeAudit } from '@/lib/admin/audit';
+import { errorResponse, isUuid, regionScope, requireAdmin } from '@/lib/admin/session';
+import { EVAC_SCOPE_WHERE } from '@/lib/admin/scope';
+import { parseEvacInput } from '@/lib/admin/evac-input';
+
+const SELECT_COLUMNS = `
+  e.id, e.kind, e.name, e.description, e.address, e.capacity, e.is_active,
+  e.latitude, e.longitude, e.source, e.verified_at, e.region_id, r.name as region_name,
+  e.created_at, e.updated_at`;
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const kind = searchParams.get('kind');
-    const search = searchParams.get('search');
+    const session = await requireAdmin();
+    const scope = regionScope(session);
+    const kind = req.nextUrl.searchParams.get('kind');
+    const search = req.nextUrl.searchParams.get('search')?.trim();
 
-    let query = `
-      SELECT 
-        id, kind, name, description, address, capacity, is_active,
-        latitude, longitude, source, source_url, verified_at,
-        created_at, updated_at
-      FROM public.evacuation_points
-      WHERE 1=1
-    `;
-    const params: unknown[] = [];
-
+    const params: unknown[] = [scope];
+    let filter = '';
     if (kind && kind !== 'ALL') {
       params.push(kind);
-      query += ` AND kind = $${params.length}`;
+      filter += ` and e.kind = $${params.length}`;
+    }
+    if (search) {
+      params.push(`%${search}%`);
+      filter += ` and (e.name ilike $${params.length} or e.address ilike $${params.length})`;
     }
 
-    if (search && search.trim()) {
-      params.push(`%${search.trim()}%`);
-      query += ` AND (name ILIKE $${params.length} OR address ILIKE $${params.length} OR description ILIKE $${params.length})`;
-    }
-
-    query += ` ORDER BY updated_at DESC, created_at DESC`;
-
-    const result = await pool.query(query, params);
-    return NextResponse.json({ success: true, data: result.rows });
-  } catch (error: any) {
-    console.error('Failed to fetch shelters:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal mengambil data shelter' },
-      { status: 500 }
+    const { rows } = await pool.query(
+      `select ${SELECT_COLUMNS}
+       from public.evacuation_points e
+       left join public.regions r on r.id = e.region_id
+       where ${EVAC_SCOPE_WHERE} ${filter}
+       order by e.is_active desc, e.updated_at desc
+       limit 500`,
+      params,
     );
+    return NextResponse.json({ success: true, data: rows });
+  } catch (error) {
+    return errorResponse(error, 'Gagal mengambil titik evakuasi');
   }
 }
 
 export async function POST(req: NextRequest) {
+  const client = await pool.connect();
   try {
-    const body = await req.json();
-    const {
-      name,
-      kind = 'SHELTER',
-      description = '',
-      address = '',
-      capacity = 100,
-      latitude,
-      longitude,
-      is_active = true,
-      source = 'BPBD / Pemda Terverifikasi',
-    } = body;
+    const session = await requireAdmin();
+    const scope = regionScope(session);
+    const input = parseEvacInput(await req.json().catch(() => ({})), true);
 
-    if (!name || latitude === undefined || longitude === undefined) {
-      return NextResponse.json(
-        { success: false, error: 'Nama dan koordinat latitude/longitude wajib diisi' },
-        { status: 400 }
-      );
-    }
+    // Government admins always create inside their own region. Super admins may pick one.
+    const regionId = scope ?? (isUuid(input.regionId) ? input.regionId : null);
 
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
-
-    const insertQuery = `
-      INSERT INTO public.evacuation_points (
-        name, kind, description, address, capacity,
-        geom, is_active, source,
-        verified_at, created_at, updated_at
-      )
-      VALUES (
-        $1, $2, $3, $4, $5,
-        ST_SetSRID(ST_MakePoint($7, $6), 4326), $8, $9,
-        NOW(), NOW(), NOW()
-      )
-      RETURNING id, name, kind, description, address, capacity, latitude, longitude, is_active, source, created_at
-    `;
-
-    const result = await pool.query(insertQuery, [
-      name.trim(),
-      kind,
-      description?.trim() || null,
-      address?.trim() || null,
-      parseInt(capacity, 10) || 0,
-      lat,
-      lng,
-      Boolean(is_active),
-      source,
-    ]);
-
-    return NextResponse.json({ success: true, data: result.rows[0] });
-  } catch (error: any) {
-    console.error('Failed to create shelter:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal menyimpan posko/shelter baru' },
-      { status: 500 }
+    await client.query('BEGIN');
+    const { rows } = await client.query(
+      `insert into public.evacuation_points
+         (name, kind, description, address, capacity, geom, is_active, source, region_id, verified_at)
+       values ($1, $2, $3, $4, $5, st_setsrid(st_makepoint($7, $6), 4326), $8, $9, $10, now())
+       returning id, name, kind`,
+      [input.name, input.kind, input.description, input.address, input.capacity, input.lat, input.lng, input.isActive ?? true, input.source, regionId],
     );
+    await writeAudit(
+      {
+        actorId: session.userId,
+        action: 'EVAC_CREATED',
+        targetType: 'EVACUATION_POINT',
+        targetId: rows[0].id,
+        metadata: { name: rows[0].name, kind: rows[0].kind },
+      },
+      client,
+    );
+    await client.query('COMMIT');
+    return NextResponse.json({ success: true, data: rows[0] });
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => undefined);
+    return errorResponse(error, 'Gagal menyimpan titik evakuasi');
+  } finally {
+    client.release();
   }
 }

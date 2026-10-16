@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
       try {
         const osmUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`;
         const osmRes = await fetch(osmUrl, {
-          headers: { 'User-Agent': 'SiagakuEmergencyOps/1.0' },
+          headers: { 'User-Agent': 'WeroEmergencyOps/1.0' },
           next: { revalidate: 60 },
         });
         if (osmRes.ok) {

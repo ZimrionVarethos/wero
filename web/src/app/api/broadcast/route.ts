@@ -1,172 +1,131 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
-import { createClient } from '@/lib/supabase/server';
 import { sendFcmBroadcast } from '@/lib/fcm';
+import { writeAudit } from '@/lib/admin/audit';
+import { errorResponse, HttpError, isUuid, regionScope, requireAdmin } from '@/lib/admin/session';
 
-function normalizeSeverity(val: string): 'AWAS' | 'SIAGA' | 'WASPADA' | 'INFO' {
-  const upper = (val || '').toUpperCase().trim();
-  if (upper === 'AWAS' || upper === 'CRITICAL' || upper === 'DANGER') return 'AWAS';
-  if (upper === 'SIAGA' || upper === 'WARNING') return 'SIAGA';
-  if (upper === 'WASPADA' || upper === 'ADVISORY') return 'WASPADA';
-  if (upper === 'INFO') return 'INFO';
-  return 'SIAGA';
-}
+const SEVERITIES = new Set(['AWAS', 'SIAGA', 'WASPADA', 'INFO']);
+const HAZARDS = new Set(['EARTHQUAKE', 'TSUNAMI', 'FLOOD', 'LANDSLIDE', 'VOLCANO', 'EXTREME_WEATHER', 'FIRE', 'OTHER']);
 
-export async function GET(_req: NextRequest) {
+// History of manual broadcasts. Government admins only see broadcasts for their region.
+export async function GET() {
   try {
-    try {
-      const result = await pool.query(`
-        SELECT 
-          id, source, source_event_id, disaster_type, severity,
-          magnitude, depth_km, headline, source_url, occurred_at,
-          is_published, region_id, source_payload, created_at, updated_at
-        FROM public.disaster_events
-        ORDER BY occurred_at DESC, created_at DESC
-        LIMIT 20
-      `);
-
-      return NextResponse.json({ success: true, data: result.rows });
-    } catch (pgError: any) {
-      console.warn('Postgres pool query failed in GET /api/broadcast, falling back to Supabase REST:', pgError?.message);
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from('disaster_events')
-        .select('*')
-        .order('occurred_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      return NextResponse.json({ success: true, data: data || [] });
-    }
-  } catch (error: any) {
-    console.error('Failed to fetch disaster events:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal mengambil data peristiwa bencana' },
-      { status: 500 }
+    const session = await requireAdmin();
+    const scope = regionScope(session);
+    const { rows } = await pool.query(
+      `select d.id, d.disaster_type, d.severity, d.headline, d.source, d.region_id,
+              d.source_payload->>'message' as message,
+              d.source_payload->>'target_type' as target_type,
+              d.source_payload->'target_regions' as target_regions,
+              d.source_payload->'fcm' as fcm,
+              coalesce(pr.display_name, d.source_payload->>'broadcasted_by') as sent_by,
+              d.occurred_at, d.created_at
+       from public.disaster_events d
+       left join public.profiles pr on pr.id::text = d.source_payload->>'actor_id'
+       where d.source_event_id like 'MANUAL-%'
+         and ($1::uuid is null or d.region_id = $1::uuid
+              or d.source_payload->'target_region_ids' ? $1::text)
+       order by d.created_at desc
+       limit 50`,
+      [scope],
     );
+    return NextResponse.json({ success: true, data: rows });
+  } catch (error) {
+    return errorResponse(error, 'Gagal mengambil riwayat siaran');
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const {
-      headline,
-      disaster_type = 'EARTHQUAKE',
-      severity = 'SIAGA',
-      source = 'PUSKODALOPS BPBD DIY',
-      source_event_id = `MANUAL-${Date.now()}`,
-      magnitude,
-      depth_km,
-      source_url,
-      target_type = 'ALL',
-      target_region_ids = [],
-      target_regions = [],
-    } = body;
+    const session = await requireAdmin();
+    const scope = regionScope(session);
+    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
 
-    if (!headline || !headline.trim()) {
-      return NextResponse.json(
-        { success: false, error: 'Judul peringatan (headline) wajib diisi' },
-        { status: 400 }
-      );
+    const severity = String(body.severity ?? '');
+    const hazard = String(body.disaster_type ?? '');
+    const headline = String(body.headline ?? '').trim();
+    const message = String(body.message ?? '').trim();
+    if (!SEVERITIES.has(severity)) throw new HttpError(400, 'Pilih tingkat status peringatan.');
+    if (!HAZARDS.has(hazard)) throw new HttpError(400, 'Pilih jenis bencana.');
+    if (headline.length < 5 || headline.length > 120) throw new HttpError(400, 'Judul wajib 5 sampai 120 karakter.');
+    if (message.length > 500) throw new HttpError(400, 'Isi pesan maksimal 500 karakter.');
+
+    // Government admins can only broadcast to their own region, whatever the client sends.
+    let targetType: 'ALL' | 'SPECIFIC';
+    let targetIds: string[];
+    if (scope) {
+      targetType = 'SPECIFIC';
+      targetIds = [scope];
+    } else if (body.target_type === 'ALL') {
+      targetType = 'ALL';
+      targetIds = [];
+    } else {
+      targetType = 'SPECIFIC';
+      targetIds = Array.isArray(body.target_region_ids) ? body.target_region_ids.filter(isUuid) : [];
+      if (targetIds.length === 0) throw new HttpError(400, 'Pilih minimal satu wilayah tujuan.');
     }
 
-    const safeSeverity = normalizeSeverity(severity);
-    const primaryRegionId =
-      target_type === 'SPECIFIC' && Array.isArray(target_region_ids) && target_region_ids.length === 1
-        ? target_region_ids[0]
-        : null;
+    const regions = targetIds.length
+      ? (await pool.query<{ id: string; name: string }>('select id, name from public.regions where id = any($1::uuid[])', [targetIds])).rows
+      : [];
+    if (targetType === 'SPECIFIC' && regions.length !== targetIds.length) {
+      throw new HttpError(400, 'Wilayah tujuan tidak ditemukan.');
+    }
 
-    const sourcePayloadObj = {
-      broadcasted_by: 'Web Admin Portal',
-      target_type: target_type === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
-      target_region_ids: Array.isArray(target_region_ids) ? target_region_ids : [],
-      target_regions: Array.isArray(target_regions) ? target_regions : [],
-      issued_at: new Date().toISOString(),
+    const issuedAt = new Date().toISOString();
+    const payload = {
+      broadcasted_by: 'Dasbor Petugas',
+      actor_id: session.userId,
+      message: message || null,
+      target_type: targetType,
+      target_region_ids: regions.map((r) => r.id),
+      target_regions: regions.map((r) => r.name),
+      issued_at: issuedAt,
     };
 
-    try {
-      const query = `
-        INSERT INTO public.disaster_events (
-          headline, disaster_type, severity, source, source_event_id,
-          magnitude, depth_km, source_url, is_published,
-          region_id, source_payload, occurred_at, created_at, updated_at
-        )
-        VALUES (
-          $1, $2, $3, $4, $5,
-          $6, $7, $8, true,
-          $9, $10, NOW(), NOW(), NOW()
-        )
-        RETURNING *
-      `;
-
-      const result = await pool.query(query, [
-        headline.trim(),
-        disaster_type,
-        safeSeverity,
-        source,
-        source_event_id,
-        magnitude ? parseFloat(magnitude) : null,
-        depth_km ? parseFloat(depth_km) : null,
-        source_url || null,
-        primaryRegionId,
-        JSON.stringify(sourcePayloadObj),
-      ]);
-
-      // Dispatch FCM Push Notification to mobile devices
-      const fcmResult = await sendFcmBroadcast({
-        headline: headline.trim(),
-        severity: safeSeverity,
-        targetType: target_type === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
-        targetRegions: target_regions,
-      }).catch((err) => {
-        console.error('[FCM] Error dispatching push:', err);
-        return { success: false, error: err?.message };
-      });
-
-      return NextResponse.json({ success: true, data: result.rows[0], fcm: fcmResult });
-    } catch (pgError: any) {
-      console.warn('Postgres pool query failed in POST /api/broadcast, falling back to Supabase REST:', pgError?.message);
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from('disaster_events')
-        .insert({
-          headline: headline.trim(),
-          disaster_type,
-          severity: safeSeverity,
-          source,
-          source_event_id,
-          magnitude: magnitude ? parseFloat(magnitude) : null,
-          depth_km: depth_km ? parseFloat(depth_km) : null,
-          source_url: source_url || null,
-          is_published: true,
-          region_id: primaryRegionId,
-          source_payload: sourcePayloadObj,
-          occurred_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Dispatch FCM Push Notification on fallback path
-      const fcmResult = await sendFcmBroadcast({
-        headline: headline.trim(),
-        severity: safeSeverity,
-        targetType: target_type === 'SPECIFIC' ? 'SPECIFIC' : 'ALL',
-        targetRegions: target_regions,
-      }).catch((err) => {
-        console.error('[FCM] Error dispatching push:', err);
-        return { success: false, error: err?.message };
-      });
-
-      return NextResponse.json({ success: true, data, fcm: fcmResult });
-    }
-  } catch (error: any) {
-    console.error('Failed to broadcast disaster alert:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal menyiarkan peringatan bencana' },
-      { status: 500 }
+    const { rows } = await pool.query(
+      `insert into public.disaster_events
+         (headline, disaster_type, severity, source, source_event_id, is_published,
+          region_id, source_payload, occurred_at)
+       values ($1, $2, $3, $4, $5, true, $6, $7, now())
+       returning id`,
+      [
+        headline,
+        hazard,
+        severity,
+        session.regionName ? `Petugas ${session.regionName}` : 'Petugas Wero',
+        `MANUAL-${Date.now()}`,
+        regions.length === 1 ? regions[0].id : null,
+        JSON.stringify(payload),
+      ],
     );
+    const eventId: string = rows[0].id;
+
+    const fcm = await sendFcmBroadcast({
+      headline,
+      severity,
+      targetType,
+      targetRegions: regions.map((r) => r.name),
+    }).catch((err: unknown) => {
+      console.error('[FCM] Error dispatching push:', err);
+      return { success: false };
+    });
+    const delivered = Boolean((fcm as { success?: boolean }).success);
+
+    await pool.query(
+      `update public.disaster_events set source_payload = source_payload || $2::jsonb where id = $1`,
+      [eventId, JSON.stringify({ fcm: { delivered } })],
+    );
+    await writeAudit({
+      actorId: session.userId,
+      action: 'ADMIN_BROADCAST',
+      targetType: 'DISASTER_EVENT',
+      targetId: eventId,
+      metadata: { severity, hazard, headline, target_type: targetType, target_regions: regions.map((r) => r.name), push_delivered: delivered },
+    });
+
+    return NextResponse.json({ success: true, data: { id: eventId, delivered, targetType, targetRegions: regions.map((r) => r.name) } });
+  } catch (error) {
+    return errorResponse(error, 'Gagal mengirim siaran');
   }
 }

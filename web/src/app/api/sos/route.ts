@@ -1,86 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
+import { errorResponse, regionScope, requireAdmin } from '@/lib/admin/session';
+import { SOS_INSIDE_REGION, SOS_SCOPE_CTE, SOS_SCOPE_JOIN, SOS_SCOPE_WHERE } from '@/lib/admin/scope';
 
-export async function GET(_req: NextRequest) {
+const STATUSES = new Set(['ACTIVE', 'CLAIMED', 'RESOLVED', 'CANCELLED', 'EXPIRED']);
+
+// The list only exposes the approximate location. Exact coordinates are released by
+// GET /api/sos/[id], which records the access in the audit log first.
+export async function GET(req: NextRequest) {
   try {
-    // 1. Fetch SOS Events with PostGIS coordinates
-    const sosRes = await pool.query(`
-      SELECT 
-        s.id, s.victim_id, s.mode, s.escalation, s.stage, s.status, s.note,
-        s.accuracy_m, s.created_at, s.stage_changed_at, s.resolved_at,
-        ST_Y(s.location::geometry) as latitude,
-        ST_X(s.location::geometry) as longitude,
-        p.display_name as victim_name
-      FROM public.sos_events s
-      LEFT JOIN public.profiles p ON s.victim_id = p.id
-      ORDER BY s.created_at DESC
-      LIMIT 50
-    `);
+    const session = await requireAdmin();
+    const scope = regionScope(session);
+    const status = req.nextUrl.searchParams.get('status');
 
-    // 2. Fetch Urgent Family Check-ins (NEED_HELP or EVACUATING)
-    const checkinRes = await pool.query(`
-      SELECT 
-        c.id, c.user_id, c.user_name, c.status, c.note, c.latitude, c.longitude,
-        c.address, c.created_at
-      FROM public.family_checkins c
-      WHERE c.status IN ('NEED_HELP', 'EVACUATING')
-      ORDER BY c.created_at DESC
-      LIMIT 50
-    `);
-
-    return NextResponse.json({
-      success: true,
-      sosEvents: sosRes.rows,
-      urgentCheckins: checkinRes.rows,
-    });
-  } catch (error: any) {
-    console.error('Failed to fetch SOS operations:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal mengambil data monitoring SOS' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const { id, status, note } = body;
-
-    if (!id || !status) {
-      return NextResponse.json(
-        { success: false, error: 'ID dan status wajib diisi' },
-        { status: 400 }
-      );
+    const params: unknown[] = [scope];
+    let filter = '';
+    if (status === 'OPEN') {
+      filter = `and s.status in ('ACTIVE', 'CLAIMED')`;
+    } else if (status && STATUSES.has(status)) {
+      params.push(status);
+      filter = `and s.status = $2`;
     }
 
-    const isResolved = status === 'RESOLVED';
-    const query = `
-      UPDATE public.sos_events
-      SET 
-        status = $1,
-        note = COALESCE($2, note),
-        stage_changed_at = NOW(),
-        resolved_at = CASE WHEN $3 = true THEN NOW() ELSE resolved_at END
-      WHERE id = $4
-      RETURNING *
-    `;
-
-    const result = await pool.query(query, [status, note, isResolved, id]);
-
-    if (result.rowCount === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Data SOS tidak ditemukan' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: result.rows[0] });
-  } catch (error: any) {
-    console.error('Failed to update SOS status:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal memperbarui status SOS' },
-      { status: 500 }
+    const { rows } = await pool.query(
+      `${SOS_SCOPE_CTE}
+       select
+         s.id, s.mode, s.escalation, s.stage, s.status, s.created_at, s.stage_changed_at, s.resolved_at,
+         st_y(s.approx_location::geometry) as approx_lat,
+         st_x(s.approx_location::geometry) as approx_lng,
+         split_part(coalesce(p.display_name, 'Warga'), ' ', 1) as victim_first_name,
+         (select count(*)::int from public.responder_claims rc
+            where rc.sos_id = s.id and rc.status in ('EN_ROUTE', 'ARRIVED')) as responders,
+         ${SOS_INSIDE_REGION} as inside_region
+       from public.sos_events s
+       ${SOS_SCOPE_JOIN}
+       where ${SOS_SCOPE_WHERE} ${filter}
+       order by (s.status in ('ACTIVE', 'CLAIMED')) desc, s.created_at desc
+       limit 200`,
+      params,
     );
+
+    return NextResponse.json({ success: true, data: rows });
+  } catch (error) {
+    return errorResponse(error, 'Gagal mengambil daftar SOS');
   }
 }

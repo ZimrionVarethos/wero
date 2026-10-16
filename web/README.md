@@ -2,7 +2,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, copy `.env.example` to `.env.local` and fill in real values. `.env.local` is gitignored; never commit credentials. The API routes need `DATABASE_URL` (the Supabase Postgres connection string from Project Settings > Database) and fail with a clear error if it is missing. In production, set the same variables in the hosting environment.
+
+```bash
+cp .env.example .env.local
+```
+
+Then run the development server:
 
 ```bash
 npm run dev

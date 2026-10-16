@@ -16,13 +16,13 @@ import {
 import HeroScene from "@/components/landing/HeroScene";
 
 // Tautan unduhan APK. Atur NEXT_PUBLIC_APK_URL saat build rilis.
-const APK_URL = process.env.NEXT_PUBLIC_APK_URL ?? "/siagaku.apk";
+const APK_URL = process.env.NEXT_PUBLIC_APK_URL ?? "/wero.apk";
 
 const CAPABILITIES = [
   {
     icon: BellRing,
     title: "Peringatan sesuai lokasi",
-    body: "Informasi gempa dan cuaca dari BMKG disaring berdasarkan wilayah Anda, lengkap dengan tingkat status dan langkah yang perlu dilakukan.",
+    body: "Gempa terbaru dari BMKG dan siaran resmi petugas untuk wilayah Anda, lengkap dengan tingkat status dan langkah yang perlu dilakukan.",
   },
   {
     icon: Map,
@@ -32,12 +32,12 @@ const CAPABILITIES = [
   {
     icon: LifeBuoy,
     title: "Bantuan SOS",
-    body: "Kirim permintaan bantuan dalam mode publik atau privat. Jangkauan diperluas bertahap dan lokasi tepat hanya terlihat oleh pihak berwenang.",
+    body: "Kirim permintaan bantuan dalam mode publik atau privat. Lokasi tepat hanya terlihat oleh petugas wilayah yang berwenang.",
   },
   {
     icon: BookOpenCheck,
     title: "Asisten pengetahuan bencana",
-    body: "Tanyakan cara menghadapi gempa, banjir, atau tsunami. Jawaban bersumber dari panduan terkurasi dan tersedia versi offline.",
+    body: "Tanyakan cara menghadapi gempa, banjir, atau tsunami. Jawaban mengikuti protokol BNPB dan BMKG, dan panduan dasar tetap tersedia saat offline.",
   },
 ] as const;
 
@@ -59,7 +59,7 @@ const PRINCIPLES = [
   {
     icon: EyeOff,
     title: "Lokasi tepat dilindungi",
-    body: "Warga lain hanya melihat perkiraan area. Lokasi tepat terbuka untuk korban dan petugas berwenang di wilayahnya, dan setiap akses tercatat.",
+    body: "Lokasi tepat hanya terbuka untuk korban dan petugas berwenang di wilayahnya, dan setiap akses tercatat.",
   },
   {
     icon: WifiOff,
@@ -75,20 +75,20 @@ const PRINCIPLES = [
 
 const FAQ = [
   {
-    q: "Apakah Siagaku bisa dipakai tanpa internet?",
+    q: "Apakah Wero bisa dipakai tanpa internet?",
     a: "Peta evakuasi yang sudah diunduh dan panduan dasar tetap bisa dibuka tanpa internet. Peringatan baru dan pengiriman SOS membutuhkan koneksi data atau sinyal.",
   },
   {
     q: "Dari mana sumber informasi peringatan?",
-    a: "Peringatan gempa dan cuaca mengacu pada informasi publik BMKG. Siagaku menyaring informasi tersebut berdasarkan wilayah yang Anda pilih.",
+    a: "Data gempa mengacu pada informasi publik BMKG. Siaran peringatan wilayah dikirim petugas ke pengguna yang memilih wilayah tersebut.",
   },
   {
     q: "Siapa yang bisa melihat lokasi saya saat mengirim SOS?",
-    a: "Mode privat hanya membagikan lokasi tepat kepada petugas berwenang di wilayah Anda. Mode publik menampilkan perkiraan area kepada warga sekitar tanpa koordinat tepat.",
+    a: "Lokasi tepat hanya bisa dibuka petugas berwenang di wilayah Anda, dan setiap pembukaan tercatat di log audit. Dasbor petugas menampilkan perkiraan area sampai kasus dibuka.",
   },
   {
     q: "Apakah jawaban asisten bisa dijadikan acuan resmi?",
-    a: "Tidak. Asisten merangkum panduan terkurasi untuk edukasi. Keputusan saat darurat tetap mengikuti arahan BPBD, BNPB, dan petugas di lapangan.",
+    a: "Tidak. Asisten merangkum protokol keselamatan untuk edukasi. Keputusan saat darurat tetap mengikuti arahan BPBD, BNPB, dan petugas di lapangan.",
   },
 ] as const;
 
@@ -105,11 +105,8 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border-neutral bg-cream/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
-          <Link href="/" className="flex items-center gap-3" aria-label="Beranda Siagaku">
-            <Image src="/logo-wero.png" alt="" width={104} height={42} priority className="h-8 w-auto" />
-            <span className="hidden sm:inline border-l border-border-neutral pl-3 text-sm font-semibold text-navy">
-              Siagaku
-            </span>
+          <Link href="/" className="flex items-center gap-3" aria-label="Beranda Wero">
+            <Image src="/logo-wero.png" alt="Wero" width={104} height={42} priority className="h-8 w-auto" />
           </Link>
           <nav aria-label="Navigasi utama" className="flex items-center gap-1 sm:gap-2">
             <a href="#fitur" className="hidden md:inline-flex min-h-12 items-center px-3 text-sm font-medium text-muted hover:text-navy">
@@ -149,7 +146,7 @@ export default function Home() {
                 Tahu apa yang terjadi. Tahu ke mana harus pergi.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg">
-                Siagaku mengumpulkan peringatan sesuai lokasi, peta evakuasi yang tetap terbuka saat offline,
+                Wero mengumpulkan peringatan sesuai lokasi, peta evakuasi yang tetap terbuka saat offline,
                 bantuan SOS, dan panduan kebencanaan dalam satu aplikasi.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
@@ -252,7 +249,7 @@ export default function Home() {
                   <MapPinned className="size-8 text-white/60" aria-hidden />
                   <h2 className="mt-6 text-3xl font-extrabold tracking-tight sm:text-4xl">Privasi dan keandalan</h2>
                   <p className="mt-4 leading-relaxed text-white/70">
-                    Data lokasi saat darurat sangat sensitif. Siagaku membatasi siapa yang bisa melihatnya dan
+                    Data lokasi saat darurat sangat sensitif. Wero membatasi siapa yang bisa melihatnya dan
                     selalu terbuka tentang apa yang bisa dan tidak bisa dilakukan aplikasi.
                   </p>
                 </div>
@@ -296,7 +293,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 md:flex-row md:items-center md:justify-between">
           <div>
             <Image src="/logo-wero.png" alt="Wero" width={104} height={42} className="h-8 w-auto" />
-            <p className="mt-3 text-sm text-muted">Siagaku, aplikasi kesiapsiagaan bencana untuk warga Indonesia.</p>
+            <p className="mt-3 text-sm text-muted">Wero, aplikasi kesiapsiagaan bencana untuk warga Indonesia.</p>
           </div>
           <nav aria-label="Tautan footer" className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
             <a href={APK_URL} download className="inline-flex min-h-12 items-center gap-2 text-navy hover:text-accent">
@@ -319,7 +316,7 @@ export default function Home() {
         </div>
         <div className="border-t border-border-neutral">
           <p className="mx-auto max-w-7xl px-5 py-5 text-xs text-muted sm:px-8">
-            © 2026 Siagaku. Dalam keadaan darurat, hubungi 112.
+            © 2026 Wero. Dalam keadaan darurat, hubungi 112.
           </p>
         </div>
       </footer>

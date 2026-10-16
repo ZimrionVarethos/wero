@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       }
 
       const res = await fetch('https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json', {
-        headers: { 'User-Agent': 'Siagaku-Wero-Operations-Server/1.0' },
+        headers: { 'User-Agent': 'Wero-Operations-Server/1.0' },
         next: { revalidate: 25 },
       });
 
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       }
 
       const res = await fetch('https://data.bmkg.go.id/DataMKG/TEWS/gempadirasakan.json', {
-        headers: { 'User-Agent': 'Siagaku-Wero-Operations-Server/1.0' },
+        headers: { 'User-Agent': 'Wero-Operations-Server/1.0' },
         next: { revalidate: 35 },
       });
 

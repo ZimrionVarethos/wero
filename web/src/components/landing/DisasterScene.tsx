@@ -18,7 +18,7 @@ const TERRAIN_SEGMENTS = 150;
 const WATER_SEGMENTS = 110;
 const TEX_SIZE = 512;
 
-// Palet Siagaku. Warna status hanya dipakai untuk makna status.
+// Palet Wero. Warna status hanya dipakai untuk makna status.
 const COLOR = {
   navy: 0x12263f,
   cream: 0xf4f2ee,

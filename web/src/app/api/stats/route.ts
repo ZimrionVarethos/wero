@@ -1,50 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { pool } from '@/lib/db';
+import { errorResponse, regionScope, requireAdmin } from '@/lib/admin/session';
+import { EVAC_SCOPE_WHERE, SOS_SCOPE_CTE, SOS_SCOPE_JOIN, SOS_SCOPE_WHERE } from '@/lib/admin/scope';
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
-    const [sheltersRes, sosRes, reportsRes, disastersRes] = await Promise.all([
-      pool.query(`
-        SELECT 
-          COUNT(*)::int as total_shelters,
-          COUNT(*) FILTER (WHERE is_active = true)::int as active_shelters,
-          COALESCE(SUM(capacity), 0)::int as total_capacity
-        FROM public.evacuation_points
-      `),
-      pool.query(`
-        SELECT 
-          COUNT(*)::int as active_sos
-        FROM public.sos_events
-        WHERE status NOT IN ('RESOLVED', 'CANCELLED')
-      `),
-      pool.query(`
-        SELECT 
-          COUNT(*)::int as pending_reports
-        FROM public.community_reports
-        WHERE status = 'PENDING'
-      `),
-      pool.query(`
-        SELECT 
-          COUNT(*)::int as active_disasters
-        FROM public.disaster_events
-        WHERE is_published = true AND created_at > NOW() - INTERVAL '7 days'
-      `),
+    const session = await requireAdmin();
+    const scope = regionScope(session);
+
+    const [sos, evac, reports, broadcasts] = await Promise.all([
+      pool.query(
+        `${SOS_SCOPE_CTE}
+         select
+           count(*) filter (where s.status = 'ACTIVE')::int as waiting,
+           count(*) filter (where s.status = 'CLAIMED')::int as claimed,
+           count(*) filter (where s.status = 'RESOLVED' and s.resolved_at > now() - interval '24 hours')::int as resolved_24h,
+           min(s.created_at) filter (where s.status = 'ACTIVE') as oldest_waiting_at
+         from public.sos_events s
+         ${SOS_SCOPE_JOIN}
+         where ${SOS_SCOPE_WHERE}`,
+        [scope],
+      ),
+      pool.query(
+        `select
+           count(*) filter (where e.is_active)::int as active,
+           count(*) filter (where not e.is_active)::int as inactive,
+           coalesce(sum(e.capacity) filter (where e.is_active), 0)::int as capacity
+         from public.evacuation_points e
+         where ${EVAC_SCOPE_WHERE}`,
+        [scope],
+      ),
+      pool.query(`select count(*)::int as pending from public.community_reports where status = 'PENDING'`),
+      pool.query(
+        `select count(*)::int as last_7d
+         from public.disaster_events d
+         where d.source_event_id like 'MANUAL-%' and d.created_at > now() - interval '7 days'
+           and ($1::uuid is null or d.region_id = $1::uuid or d.source_payload->'target_region_ids' ? $1::text)`,
+        [scope],
+      ),
     ]);
 
     return NextResponse.json({
       success: true,
-      stats: {
-        shelters: sheltersRes.rows[0],
-        activeSos: sosRes.rows[0]?.active_sos ?? 0,
-        pendingReports: reportsRes.rows[0]?.pending_reports ?? 0,
-        activeDisasters: disastersRes.rows[0]?.active_disasters ?? 0,
+      data: {
+        sos: sos.rows[0],
+        evacuation: evac.rows[0],
+        pendingReports: reports.rows[0].pending,
+        broadcasts7d: broadcasts.rows[0].last_7d,
       },
     });
-  } catch (error: any) {
-    console.error('Failed to aggregate dashboard stats:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Gagal menghitung statistik' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return errorResponse(error, 'Gagal menghitung ringkasan');
   }
 }
