@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/bmkg/cron",
-      "schedule": "*/2 * * * *"
-    }
-  ]
-}
+{}

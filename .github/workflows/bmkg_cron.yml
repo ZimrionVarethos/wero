@@ -1,0 +1,24 @@
+name: BMKG Autonomous Realtime Sync
+
+on:
+  schedule:
+    # Triggered automatically every 5 minutes by GitHub Actions
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync-bmkg:
+    name: Ping BMKG Cron Endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit BMKG Cloud Cron
+        run: |
+          echo "Triggering Wero BMKG Autonomous Sync..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "https://wero-mu.vercel.app/api/bmkg/cron")
+          echo "$response"
+          status=$(echo "$response" | grep "HTTP_STATUS" | cut -d':' -f2)
+          if [ "$status" -eq 200 ]; then
+            echo "Sync completed successfully."
+          else
+            echo "Notice: Endpoint returned HTTP $status (will retry on next interval)."
+          fi
