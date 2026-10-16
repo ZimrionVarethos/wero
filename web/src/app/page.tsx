@@ -11,11 +11,13 @@ import {
   MapPinned,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   WifiOff,
 } from "lucide-react";
-import HeroScene from "@/components/landing/HeroScene";
+import PhoneMockup from "@/components/landing/PhoneMockup";
+import SimulationCard from "@/components/landing/SimulationCard";
 
-// Tautan unduhan APK. Atur NEXT_PUBLIC_APK_URL saat build rilis.
+// Tautan unduhan APK.
 const APK_URL = process.env.NEXT_PUBLIC_APK_URL ?? "/wero.apk";
 
 const CAPABILITIES = [
@@ -46,13 +48,6 @@ const STEPS = [
   { title: "Simpan peta offline", body: "Unduh peta evakuasi wilayah Anda selagi koneksi tersedia." },
   { title: "Terima peringatan", body: "Notifikasi menampilkan status, wilayah terdampak, dan tindakan." },
   { title: "Bergerak atau minta bantuan", body: "Ikuti jalur ke titik evakuasi atau kirim SOS bila terjebak." },
-] as const;
-
-const STATUS_LEVELS = [
-  { label: "AWAS", color: "bg-awas" },
-  { label: "SIAGA", color: "bg-siaga" },
-  { label: "WASPADA", color: "bg-waspada" },
-  { label: "AMAN", color: "bg-aman" },
 ] as const;
 
 const PRINCIPLES = [
@@ -97,20 +92,23 @@ export default function Home() {
     <div className="min-h-screen bg-cream text-foreground">
       <a
         href="#konten"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:text-sm focus:font-semibold"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:text-sm focus:font-semibold shadow-md"
       >
         Lewati ke konten
       </a>
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border-neutral bg-cream/90 backdrop-blur">
+      {/* 1. Navbar Paling Atas */}
+      <header className="sticky top-0 z-50 border-b border-border-neutral bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Beranda Wero">
-            <Image src="/logo-wero.png" alt="Wero" width={104} height={42} priority className="h-8 w-auto" />
+            <Image src="/logo-wero.png" alt="Wero" width={110} height={44} priority className="h-9 w-auto" />
           </Link>
           <nav aria-label="Navigasi utama" className="flex items-center gap-1 sm:gap-2">
             <a href="#fitur" className="hidden md:inline-flex min-h-12 items-center px-3 text-sm font-medium text-muted hover:text-navy">
               Fitur
+            </a>
+            <a href="#demo-simulasi" className="hidden md:inline-flex min-h-12 items-center px-3 text-sm font-medium text-muted hover:text-navy">
+              Demo & Simulasi
             </a>
             <a href="#cara-kerja" className="hidden md:inline-flex min-h-12 items-center px-3 text-sm font-medium text-muted hover:text-navy">
               Cara kerja
@@ -121,10 +119,16 @@ export default function Home() {
             <a href="#faq" className="hidden md:inline-flex min-h-12 items-center px-3 text-sm font-medium text-muted hover:text-navy">
               FAQ
             </a>
+            <Link
+              href="/admin/login"
+              className="hidden sm:inline-flex min-h-11 items-center px-3 text-sm font-semibold text-navy hover:text-accent"
+            >
+              Portal Petugas
+            </Link>
             <a
               href={APK_URL}
-              download
-              className="ml-2 inline-flex min-h-11 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-semibold text-white hover:bg-[#cf4f0a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              download="wero.apk"
+              className="ml-2 inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#cf4f0a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <Download className="size-4" aria-hidden />
               Unduh APK
@@ -134,57 +138,119 @@ export default function Home() {
       </header>
 
       <main id="konten">
-        {/* Hero */}
-        <section className="bg-navy text-white">
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:py-20">
-            <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white/70">
-                <Smartphone className="size-3.5" aria-hidden />
-                Aplikasi Android
-              </p>
-              <h1 className="mt-5 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.4rem]">
-                Tahu apa yang terjadi. Tahu ke mana harus pergi.
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg">
-                Wero mengumpulkan peringatan sesuai lokasi, peta evakuasi yang tetap terbuka saat offline,
-                bantuan SOS, dan panduan kebencanaan dalam satu aplikasi.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a
-                  href={APK_URL}
-                  download
-                  className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-accent px-6 text-base font-semibold text-white hover:bg-[#cf4f0a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                >
-                  <Download className="size-5" aria-hidden />
-                  Unduh APK
-                </a>
-                <a
-                  href="#cara-kerja"
-                  className="inline-flex min-h-12 items-center rounded-xl border border-white/25 px-6 text-base font-semibold text-white hover:bg-white/10"
-                >
-                  Lihat cara kerja
-                </a>
-              </div>
+        {/* 2. Section Utama (Hero Persis Gambar) */}
+        <section className="relative overflow-hidden bg-white border-b border-border-neutral min-h-[580px] sm:min-h-[660px] lg:min-h-[720px] flex items-center justify-center">
+          {/* Background Ornamen Sungai, Gunung, Matahari di sudut-sudut persis gambar */}
+          <div
+            className="absolute inset-0 bg-contain bg-center bg-no-repeat pointer-events-none opacity-95"
+            style={{ backgroundImage: `url('/hero-frame.png')` }}
+          />
 
-              {/* Skala status, selalu label teks + warna */}
-              <div className="mt-10 border-t border-white/10 pt-6">
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/50">Tingkat status peringatan</p>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {STATUS_LEVELS.map((s) => (
-                    <li key={s.label} className="inline-flex items-center gap-2 rounded-md bg-white/5 px-2.5 py-1.5 text-xs font-bold tracking-wide">
-                      <span className={`size-2.5 rounded-full ${s.color}`} aria-hidden />
-                      {s.label}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {/* Konten Utama di Tengah */}
+          <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-5 py-16 text-center sm:py-24">
+            {/* Logo Wero */}
+            <div className="relative">
+              <Image
+                src="/logo-wero.png"
+                alt="Wero Logo"
+                width={260}
+                height={100}
+                priority
+                className="h-20 sm:h-28 md:h-32 w-auto object-contain drop-shadow-sm"
+              />
             </div>
 
-            <HeroScene />
+            {/* Slogan "We are Hero" */}
+            <h1 className="mt-4 text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-[#12263F]">
+              We are Hero
+            </h1>
+
+            {/* Deskripsi */}
+            <p className="mt-3.5 max-w-xl text-base sm:text-lg md:text-xl font-medium text-[#12263F]/85 leading-relaxed">
+              Wero dirancang sebagai aplikasi peringatan dini dengan support komunitas
+            </p>
+
+            {/* Tombol Download dengan Robot Android Lucu di Sebelah Kiri */}
+            <div className="mt-8 flex items-center justify-center">
+              <a
+                href={APK_URL}
+                download="wero.apk"
+                className="group relative flex items-center justify-center rounded-2xl bg-[#f8a56a] hover:bg-[#f39755] px-8 sm:px-12 py-3.5 sm:py-4 shadow-[0_8px_24px_rgba(248,165,106,0.35)] transition-all hover:scale-105 active:scale-95"
+              >
+                {/* Robot Android Hijau di Kiri Tombol */}
+                <div className="absolute -left-7 sm:-left-8 top-1/2 -translate-y-1/2">
+                  <Image
+                    src="/android-robot.png"
+                    alt="Android Robot"
+                    width={72}
+                    height={80}
+                    priority
+                    className="h-16 sm:h-20 w-auto object-contain drop-shadow-md"
+                  />
+                </div>
+
+                {/* Teks Download */}
+                <span className="ml-8 sm:ml-10 text-2xl sm:text-3xl font-black tracking-wide text-[#12263F]">
+                  Download
+                </span>
+              </a>
+            </div>
+
+            <p className="mt-4 text-xs font-semibold text-muted">
+              Versi Android APK Rilis Terbaru (~67.9 MB) • Bebas Biaya
+            </p>
           </div>
         </section>
 
-        {/* Empat kemampuan inti */}
+        {/* 3. Section Kedua: Demo di Kiri & Simulasi 3D di Kanan */}
+        <section id="demo-simulasi" className="scroll-mt-16 bg-navy text-white py-16 sm:py-24">
+          <div className="mx-auto max-w-7xl px-5 sm:px-8">
+            {/* Header Section */}
+            <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/20 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-accent border border-accent/30">
+                <Sparkles className="size-3.5" aria-hidden />
+                Interaktif & Realtime
+              </span>
+              <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+                Coba Langsung Aplikasi & Pantau Simulasi Bencana
+              </h2>
+              <p className="mt-3.5 text-base sm:text-lg text-white/75 leading-relaxed">
+                Di sebelah kiri, Anda dapat berinteraksi langsung dengan aplikasi mobile Wero pada mockup smartphone. Di sebelah kanan, putar sudut pandang simulasi visual skenario bencana 3D.
+              </p>
+            </div>
+
+            {/* Grid 2 Kolom: Kiri Demo HP, Kanan Simulasi 3D */}
+            <div className="grid gap-10 lg:grid-cols-2 items-start">
+              {/* Kolom Kiri: Demo Mockup HP */}
+              <div className="flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur shadow-xl">
+                <div className="mb-4 text-center">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-bold text-accent">
+                    <Smartphone className="size-4" /> Mockup Ponsel Interaktif
+                  </span>
+                  <p className="mt-1 text-xs text-white/60">
+                    Aplikasi live berjalan di dalam layar smartphone. Klik menu untuk bernavigasi.
+                  </p>
+                </div>
+                <PhoneMockup demoUrl="/app/index.html" />
+              </div>
+
+              {/* Kolom Kanan: Simulasi 3D Bencana */}
+              <div className="flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur shadow-xl">
+                <div className="mb-4 text-center">
+                  <span className="inline-flex items-center gap-1.5 text-sm font-bold text-white">
+                    <LifeBuoy className="size-4 text-[#C62828]" /> Simulasi 3D Dampak Bencana
+                  </span>
+                  <p className="mt-1 text-xs text-white/60">
+                    Pilih skenario bencana dan putar sudut pandang kamera dengan kursor mouse Anda.
+                  </p>
+                </div>
+                <SimulationCard />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Empat kemampuan inti */}
         <section id="fitur" className="scroll-mt-16">
           <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
             <div className="grid gap-12 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
@@ -194,8 +260,7 @@ export default function Home() {
                   Empat hal yang paling dibutuhkan saat bencana
                 </h2>
                 <p className="mt-4 text-base leading-relaxed text-muted">
-                  Tidak ada menu berlapis. Setiap fitur dirancang agar tetap mudah dipakai saat panik, dengan
-                  tombol besar dan teks yang singkat.
+                  Tidak ada menu berbelit. Setiap fitur dirancang agar mudah digunakan dalam keadaan darurat, dengan tombol yang jelas dan informasi yang akurat.
                 </p>
               </div>
               <ol className="divide-y divide-border-neutral border-y border-border-neutral">
@@ -218,7 +283,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Cara kerja */}
+        {/* 5. Cara kerja */}
         <section id="cara-kerja" className="scroll-mt-16 border-y border-border-neutral bg-white">
           <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
             <h2 className="text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Cara kerja</h2>
@@ -240,7 +305,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Privasi dan keandalan */}
+        {/* 6. Privasi dan keandalan */}
         <section id="privasi" className="scroll-mt-16">
           <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
             <div className="overflow-hidden rounded-2xl bg-navy text-white">
@@ -248,39 +313,43 @@ export default function Home() {
                 <div className="border-b border-white/10 p-8 sm:p-12 lg:border-b-0 lg:border-r">
                   <MapPinned className="size-8 text-white/60" aria-hidden />
                   <h2 className="mt-6 text-3xl font-extrabold tracking-tight sm:text-4xl">Privasi dan keandalan</h2>
-                  <p className="mt-4 leading-relaxed text-white/70">
-                    Data lokasi saat darurat sangat sensitif. Wero membatasi siapa yang bisa melihatnya dan
-                    selalu terbuka tentang apa yang bisa dan tidak bisa dilakukan aplikasi.
+                  <p className="mt-4 text-base leading-relaxed text-white/75">
+                    Data darurat warga diperlakukan dengan penuh kehati-hatian. Kami menjaga kerahasiaan lokasi Anda dan memastikan setiap akses oleh petugas tercatat.
                   </p>
                 </div>
-                <ul className="divide-y divide-white/10">
+                <div className="divide-y divide-white/10">
                   {PRINCIPLES.map(({ icon: Icon, title, body }) => (
-                    <li key={title} className="flex gap-5 p-8 sm:px-12">
-                      <Icon className="mt-0.5 size-6 shrink-0 text-white/70" aria-hidden />
-                      <div>
-                        <h3 className="font-bold">{title}</h3>
-                        <p className="mt-1.5 text-sm leading-relaxed text-white/70">{body}</p>
+                    <div key={title} className="p-8 sm:p-10">
+                      <div className="flex items-center gap-3">
+                        <Icon className="size-5 text-white/60" aria-hidden />
+                        <h3 className="text-lg font-bold">{title}</h3>
                       </div>
-                    </li>
+                      <p className="mt-3 text-sm leading-relaxed text-white/70">{body}</p>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* FAQ */}
-        <section id="faq" className="scroll-mt-16">
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 pb-24 sm:px-8 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
-            <h2 className="text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">Pertanyaan umum</h2>
-            <div className="divide-y divide-border-neutral border-y border-border-neutral">
-              {FAQ.map((item) => (
-                <details key={item.q} className="group">
-                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-5 text-left font-semibold text-navy [&::-webkit-details-marker]:hidden">
-                    {item.q}
-                    <ChevronDown className="size-5 shrink-0 text-muted transition-transform group-open:rotate-180" aria-hidden />
+        {/* 7. FAQ */}
+        <section id="faq" className="scroll-mt-16 border-t border-border-neutral bg-white">
+          <div className="mx-auto max-w-4xl px-5 py-20 sm:px-8">
+            <h2 className="text-center text-3xl font-extrabold tracking-tight text-navy sm:text-4xl">
+              Pertanyaan yang sering diajukan
+            </h2>
+            <div className="mt-12 space-y-4">
+              {FAQ.map(({ q, a }) => (
+                <details
+                  key={q}
+                  className="group rounded-xl border border-border-neutral bg-cream/50 p-5 transition-colors open:bg-cream"
+                >
+                  <summary className="flex cursor-pointer items-center justify-between font-bold text-navy">
+                    <span>{q}</span>
+                    <ChevronDown className="size-5 text-muted transition-transform group-open:rotate-180" aria-hidden />
                   </summary>
-                  <p className="pb-6 pr-10 leading-relaxed text-muted">{item.a}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{a}</p>
                 </details>
               ))}
             </div>
@@ -289,35 +358,19 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border-neutral bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 md:flex-row md:items-center md:justify-between">
-          <div>
-            <Image src="/logo-wero.png" alt="Wero" width={104} height={42} className="h-8 w-auto" />
-            <p className="mt-3 text-sm text-muted">Wero, aplikasi kesiapsiagaan bencana untuk warga Indonesia.</p>
+      <footer className="border-t border-border-neutral bg-cream py-12 text-sm text-muted">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-5 sm:flex-row sm:px-8">
+          <div className="flex items-center gap-3">
+            <Image src="/logo-wero.png" alt="Wero" width={80} height={32} className="h-6 w-auto" />
+            <span>&copy; {new Date().getFullYear()} Wero. Aplikasi Kesiapsiagaan Bencana.</span>
           </div>
-          <nav aria-label="Tautan footer" className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium">
-            <a href={APK_URL} download className="inline-flex min-h-12 items-center gap-2 text-navy hover:text-accent">
-              <Download className="size-4" aria-hidden />
-              Unduh APK
-            </a>
-            <a href="#privasi" className="inline-flex min-h-12 items-center text-muted hover:text-navy">
-              Kebijakan Privasi
-            </a>
-            <span className="inline-flex min-h-12 items-center text-muted/60" aria-disabled="true">
-              Ketentuan Penggunaan (segera)
-            </span>
-            <span className="inline-flex min-h-12 items-center text-muted/60" aria-disabled="true">
-              Kontak (segera)
-            </span>
-            <Link href="/admin" className="inline-flex min-h-12 items-center text-muted hover:text-navy">
-              Dasbor petugas
-            </Link>
-          </nav>
-        </div>
-        <div className="border-t border-border-neutral">
-          <p className="mx-auto max-w-7xl px-5 py-5 text-xs text-muted sm:px-8">
-            © 2026 Wero. Dalam keadaan darurat, hubungi 112.
-          </p>
+          <div className="flex gap-6">
+            <a href="#fitur" className="hover:text-navy">Fitur</a>
+            <a href="#demo-simulasi" className="hover:text-navy">Demo & Simulasi</a>
+            <a href="#cara-kerja" className="hover:text-navy">Cara Kerja</a>
+            <a href="#privasi" className="hover:text-navy">Privasi</a>
+            <Link href="/admin/login" className="font-semibold text-navy hover:text-accent">Login Petugas</Link>
+          </div>
         </div>
       </footer>
     </div>
