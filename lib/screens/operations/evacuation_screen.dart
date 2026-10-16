@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../core/providers/operations_providers.dart';
+import '../../core/providers/supabase_providers.dart';
+import '../../core/providers/volunteer_providers.dart';
 import '../../models/evacuation_point.dart';
+import '../../models/public_sos_event.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
@@ -15,6 +18,7 @@ import 'widgets/evacuation_map_view.dart';
 import 'widgets/evacuation_search_bar.dart';
 import 'widgets/facility_card.dart';
 import 'widgets/facility_detail_sheet.dart';
+import 'widgets/volunteer_sos_detail_sheet.dart';
 import '../../widgets/app_header.dart';
 
 /// Screen listing verified evacuation shelters and health facilities with search, filters, and map toggle.
@@ -91,6 +95,19 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
     );
   }
 
+  void _showVolunteerDetail(PublicSosEvent sos) {
+    VolunteerSosDetailSheet.show(
+      context,
+      event: sos,
+      onStartRoute: () {
+        setState(() {
+          _selectedRoutePoint = null;
+          _isMapView = true;
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final query = EvacuationQuery(
@@ -98,6 +115,13 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
       searchQuery: _searchQuery,
     );
     final pointsAsync = ref.watch(evacuationPointsProvider(query));
+    final publicSosQuery = PublicSosQuery(
+      latitude: _userLocation.latitude,
+      longitude: _userLocation.longitude,
+    );
+    final publicSosAsync = ref.watch(nearbyPublicSosProvider(publicSosQuery));
+    final activeMission = ref.watch(activeVolunteerMissionProvider);
+    final currentUser = ref.watch(currentUserProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
@@ -159,6 +183,21 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
                       points: points,
                       activeRoutePoint: _selectedRoutePoint,
                       userLocation: _userLocation,
+                      publicSosList: publicSosAsync.asData?.value,
+                      onSosSelected: _showVolunteerDetail,
+                      activeVolunteerMission: activeMission,
+                      onClearVolunteerRoute: () {
+                        final id = currentUser?.id ?? 'guest-volunteer';
+                        ref
+                            .read(activeVolunteerMissionProvider.notifier)
+                            .finishMission(id);
+                      },
+                      onVolunteerArrived: () {
+                        final id = currentUser?.id ?? 'guest-volunteer';
+                        ref
+                            .read(activeVolunteerMissionProvider.notifier)
+                            .markArrived(id);
+                      },
                       onLocationSynced: (loc) {
                         setState(() => _userLocation = loc);
                         const EvacuationCacheService().saveLastLocation(

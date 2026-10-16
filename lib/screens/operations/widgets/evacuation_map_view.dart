@@ -3,11 +3,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../core/config/app_config.dart';
+import '../../../core/providers/volunteer_providers.dart';
 import '../../../models/evacuation_point.dart';
+import '../../../models/public_sos_event.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_styles.dart';
 import 'active_route_banner.dart';
+import 'active_volunteer_banner.dart';
 import 'evacuation_map_markers.dart';
 import 'map_layer_button.dart';
 import 'map_location_button.dart';
@@ -24,6 +27,11 @@ class EvacuationMapView extends StatefulWidget {
     this.initialCenter = const LatLng(-7.7956, 110.3695),
     this.userLocation = const LatLng(-7.7956, 110.3695),
     this.onLocationSynced,
+    this.publicSosList,
+    this.onSosSelected,
+    this.activeVolunteerMission,
+    this.onClearVolunteerRoute,
+    this.onVolunteerArrived,
   });
 
   final List<EvacuationPoint> points;
@@ -33,6 +41,11 @@ class EvacuationMapView extends StatefulWidget {
   final LatLng initialCenter;
   final LatLng userLocation;
   final ValueChanged<LatLng>? onLocationSynced;
+  final List<PublicSosEvent>? publicSosList;
+  final ValueChanged<PublicSosEvent>? onSosSelected;
+  final ActiveVolunteerMission? activeVolunteerMission;
+  final VoidCallback? onClearVolunteerRoute;
+  final VoidCallback? onVolunteerArrived;
 
   @override
   State<EvacuationMapView> createState() => _EvacuationMapViewState();
@@ -62,7 +75,8 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
     super.didUpdateWidget(oldWidget);
     if (widget.userLocation != oldWidget.userLocation) {
       _currentLocation = widget.userLocation;
-      if (widget.activeRoutePoint == null) {
+      if (widget.activeRoutePoint == null &&
+          widget.activeVolunteerMission == null) {
         _mapController.move(_currentLocation, 14.0);
       }
     }
@@ -74,6 +88,14 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
       _mapController.move(
         LatLng(newRoute.latitude!, newRoute.longitude!),
         14.5,
+      );
+    }
+    final newMission = widget.activeVolunteerMission;
+    if (newMission != null &&
+        newMission.event.id != oldWidget.activeVolunteerMission?.event.id) {
+      _mapController.move(
+        LatLng(newMission.event.latitude, newMission.event.longitude),
+        15.0,
       );
     }
   }
@@ -104,24 +126,33 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
     final targetPoint = widget.activeRoutePoint;
     final targetLatLng =
         (targetPoint?.latitude != null && targetPoint?.longitude != null)
-        ? LatLng(targetPoint!.latitude!, targetPoint.longitude!)
+            ? LatLng(targetPoint!.latitude!, targetPoint.longitude!)
+            : null;
+
+    final mission = widget.activeVolunteerMission;
+    final missionLatLng = mission != null
+        ? LatLng(mission.event.latitude, mission.event.longitude)
         : null;
 
-    final routePoints = targetLatLng != null
-        ? _buildRoutePath(_currentLocation, targetLatLng)
-        : <LatLng>[];
+    final routePoints = missionLatLng != null
+        ? _buildRoutePath(_currentLocation, missionLatLng)
+        : (targetLatLng != null
+            ? _buildRoutePath(_currentLocation, targetLatLng)
+            : <LatLng>[]);
 
     final mapboxUrl = AppConfig.isMapboxConfigured
         ? 'https://api.mapbox.com/styles/v1/${_currentStyle.styleId}/tiles/256/{z}/{x}/{y}@2x?access_token=${AppConfig.mapboxToken}'
         : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+    final effectiveTarget = missionLatLng ?? targetLatLng;
 
     return Stack(
       children: [
         FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-            initialCenter: targetLatLng ?? _currentLocation,
-            initialZoom: targetLatLng != null ? 14.0 : 12.5,
+            initialCenter: effectiveTarget ?? _currentLocation,
+            initialZoom: effectiveTarget != null ? 14.5 : 12.5,
             minZoom: 4.0,
             maxZoom: 18.0,
           ),
@@ -142,9 +173,11 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
                 polylines: [
                   Polyline(
                     points: routePoints,
-                    strokeWidth: 5.0,
-                    color: AppColors.chartBlue,
-                    borderStrokeWidth: 2.0,
+                    strokeWidth: 5.5,
+                    color: mission != null
+                        ? AppColors.awas
+                        : AppColors.chartBlue,
+                    borderStrokeWidth: 2.5,
                     borderColor: Colors.white,
                   ),
                 ],
@@ -159,11 +192,29 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
                     onTap: () => widget.onPointSelected(point),
                   ),
                 ),
+                if (widget.publicSosList != null)
+                  ...widget.publicSosList!.map(
+                    (sos) => EvacuationMapMarkers.buildPublicSosMarker(
+                      latitude: sos.latitude,
+                      longitude: sos.longitude,
+                      isSelected: mission?.event.id == sos.id,
+                      onTap: () => widget.onSosSelected?.call(sos),
+                    ),
+                  ),
               ],
             ),
           ],
         ),
-        if (targetPoint != null && targetLatLng != null)
+        if (mission != null && missionLatLng != null)
+          ActiveVolunteerBanner(
+            event: mission.event,
+            targetLatLng: missionLatLng,
+            userLocation: _currentLocation,
+            status: mission.status,
+            onMarkArrived: () => widget.onVolunteerArrived?.call(),
+            onClearRoute: () => widget.onClearVolunteerRoute?.call(),
+          )
+        else if (targetPoint != null && targetLatLng != null)
           ActiveRouteBanner(
             point: targetPoint,
             targetLatLng: targetLatLng,

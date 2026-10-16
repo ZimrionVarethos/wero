@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/disaster_event.dart';
@@ -15,10 +16,37 @@ final operationsServiceProvider = Provider<OperationsService>((ref) {
 
 /// Async notifier managing the user's active SOS status.
 class ActiveSosNotifier extends AsyncNotifier<SosEvent?> {
+  Timer? _pollTimer;
+
   @override
   Future<SosEvent?> build() async {
+    ref.onDispose(() {
+      _pollTimer?.cancel();
+    });
+
     final service = ref.watch(operationsServiceProvider);
-    return service.fetchActiveSos();
+    final initial = await service.fetchActiveSos();
+
+    if (initial != null) {
+      _startAdminResolutionWatch(initial.id);
+    }
+
+    return initial;
+  }
+
+  void _startAdminResolutionWatch(String sosId) {
+    _pollTimer?.cancel();
+    // Poll every 4 seconds to detect when admin or helpers resolve the SOS
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
+      try {
+        final service = ref.read(operationsServiceProvider);
+        final latest = await service.fetchActiveSos();
+        if (latest == null || !latest.isActive) {
+          _pollTimer?.cancel();
+          state = const AsyncValue.data(null);
+        }
+      } catch (_) {}
+    });
   }
 
   /// Trigger emergency SOS.
@@ -40,6 +68,7 @@ class ActiveSosNotifier extends AsyncNotifier<SosEvent?> {
         note: note,
       );
       state = AsyncValue.data(created);
+      _startAdminResolutionWatch(created.id);
       return created;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -49,6 +78,7 @@ class ActiveSosNotifier extends AsyncNotifier<SosEvent?> {
 
   /// Cancel active SOS.
   Future<void> cancelSos([String? reason]) async {
+    _pollTimer?.cancel();
     final current = state.asData?.value;
     if (current == null) return;
     final service = ref.read(operationsServiceProvider);
@@ -58,6 +88,7 @@ class ActiveSosNotifier extends AsyncNotifier<SosEvent?> {
 
   /// Resolve active SOS.
   Future<void> resolveSos([String? note]) async {
+    _pollTimer?.cancel();
     final current = state.asData?.value;
     if (current == null) return;
     final service = ref.read(operationsServiceProvider);

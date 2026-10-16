@@ -14,7 +14,6 @@ import '../widgets/contour_wave_background.dart';
 import 'activity/widgets/condition_summary_banner.dart';
 import 'activity/widgets/local_community_section.dart';
 import 'activity/widgets/quick_access_bar.dart';
-import 'operations/widgets/sos_active_card.dart';
 import 'operations/widgets/sos_button.dart';
 
 /// Activity Discovery & Operations dashboard screen.
@@ -46,7 +45,6 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final activeSosAsync = ref.watch(activeSosProvider);
     final profile = ref.watch(userProfileProvider).asData?.value;
     final regions = ref.watch(regionsListProvider).asData?.value;
     final regionName =
@@ -87,32 +85,15 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                   child: ConditionSummaryBanner(),
                 ),
 
-                // 2. Active SOS & Quick Access (Kerabat & Panduan)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
+                // 2. Quick Access (Kerabat & Panduan)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
                     AppSpacing.xs,
                     AppSpacing.pagePadding,
                     AppSpacing.xs,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      activeSosAsync.when(
-                        data: (sos) => sos != null
-                            ? Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.md,
-                                ),
-                                child: SosActiveCard(event: sos),
-                              )
-                            : const SizedBox.shrink(),
-                        loading: () => const SizedBox.shrink(),
-                        error: (_, _) => const SizedBox.shrink(),
-                      ),
-                      const QuickAccessBar(),
-                    ],
-                  ),
+                  child: QuickAccessBar(),
                 ),
                 // Konten komunitas lokal
                 Padding(

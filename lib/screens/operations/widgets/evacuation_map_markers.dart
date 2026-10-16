@@ -90,4 +90,58 @@ class EvacuationMapMarkers {
       ),
     );
   }
+
+  static Marker buildPublicSosMarker({
+    required double latitude,
+    required double longitude,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Marker(
+      point: LatLng(latitude, longitude),
+      width: 56,
+      height: 56,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.awas.withValues(alpha: 0.25),
+              ),
+            ),
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.awas,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: isSelected ? 3.5 : 2.5,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black38,
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+
