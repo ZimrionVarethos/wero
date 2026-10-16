@@ -30,4 +30,7 @@ abstract final class AppRadius {
 
   /// Standard radius for icon tiles and small controls.
   static const double iconTile = 10.0;
+
+  /// Radius for large curved hero banners and bottom arcs (~32 dp).
+  static const double heroCurve = 32.0;
 }

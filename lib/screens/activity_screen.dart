@@ -65,28 +65,60 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
           ref.invalidate(activeSosProvider);
         },
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.pagePadding,
-            AppSpacing.base,
-            AppSpacing.pagePadding,
-            80, // room for FAB
-          ),
+          padding: EdgeInsets.zero,
           children: [
-            activeSosAsync.when(
-              data: (sos) => sos != null
-                  ? Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: SosActiveCard(event: sos),
-                    )
-                  : const SizedBox.shrink(),
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => const SizedBox.shrink(),
+            // Area hero atas dengan background putih dan lekukan melengkung
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceWhite,
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(AppRadius.heroCurve),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryNavy.withValues(alpha: 0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.sm,
+                AppSpacing.pagePadding,
+                AppSpacing.xl,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  activeSosAsync.when(
+                    data: (sos) => sos != null
+                        ? Padding(
+                            padding:
+                                const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: SosActiveCard(event: sos),
+                          )
+                        : const SizedBox.shrink(),
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
+                  const QuickAccessBar(),
+                ],
+              ),
             ),
-            const QuickAccessBar(),
-            const SizedBox(height: AppSpacing.lg),
-            LocalCommunitySection(
-              cityName: titleCity,
-              postsAsync: recentPostsAsync,
+            // Konten komunitas di atas kanvas krem
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+                AppSpacing.pagePadding,
+                80, // room for FAB
+              ),
+              child: LocalCommunitySection(
+                cityName: titleCity,
+                postsAsync: recentPostsAsync,
+              ),
             ),
           ],
         ),

@@ -7,12 +7,10 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/providers/operations_providers.dart';
 import '../../../services/location_service.dart';
 import '../../../theme/app_colors.dart';
-import '../../../theme/app_spacing.dart';
-import '../../../theme/app_text_styles.dart';
 import 'location_required_dialog.dart';
 import 'sos_dialog.dart';
 
-/// Interactive Emergency SOS button requiring a 2.5s press-and-hold gesture.
+/// Circular Emergency SOS button requiring a 2.5s press-and-hold with pulsing wave animation.
 class SosButton extends ConsumerStatefulWidget {
   const SosButton({super.key});
 
@@ -59,9 +57,7 @@ class _SosButtonState extends ConsumerState<SosButton>
       setState(() => _isHolding = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Tekan dan tahan selama 2.5 detik untuk mengaktifkan SOS.',
-          ),
+          content: Text('Tekan dan tahan selama 2.5 detik untuk memicu SOS.'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -104,7 +100,7 @@ class _SosButtonState extends ConsumerState<SosButton>
               content: Text(
                 'Sinyal SOS Darurat berhasil disiarkan dengan lokasi GPS asli!',
               ),
-              backgroundColor: AppColors.chartRed,
+              backgroundColor: AppColors.awas,
             ),
           );
         }
@@ -113,7 +109,7 @@ class _SosButtonState extends ConsumerState<SosButton>
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Gagal menyiarkan SOS: $e'),
-              backgroundColor: AppColors.chartRed,
+              backgroundColor: AppColors.awas,
             ),
           );
         }
@@ -121,65 +117,101 @@ class _SosButtonState extends ConsumerState<SosButton>
     }
   }
 
+  Widget _buildWaveRing(double progress, double delay) {
+    final t = (progress * 2.5 + delay) % 1.0;
+    final scale = 1.0 + (t * 0.75);
+    final opacity = (1.0 - t).clamp(0.0, 1.0) * 0.45;
+
+    return Transform.scale(
+      scale: scale,
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.awas.withValues(alpha: opacity * 0.25),
+          border: Border.all(
+            color: AppColors.awas.withValues(alpha: opacity),
+            width: 2.0,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _onPressStart(),
-      onTapUp: (_) => _onPressEnd(),
-      onTapCancel: _onPressEnd,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: AppColors.accentOrange,
-              borderRadius: BorderRadius.circular(AppRadius.button),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accentOrange.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              children: [
-                if (_isHolding)
-                  FractionallySizedBox(
-                    widthFactor: _controller.value,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(AppRadius.button),
-                      ),
-                    ),
-                  ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.emergency_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      _isHolding ? 'Tahan tombol...' : 'DARURAT SOS',
-                      style: AppTextStyles.label.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
+    return Semantics(
+      button: true,
+      label: 'Tombol Darurat SOS. Tekan dan tahan 2.5 detik untuk membuka popup konfirmasi.',
+      child: GestureDetector(
+        onTapDown: (_) => _onPressStart(),
+        onTapUp: (_) => _onPressEnd(),
+        onTapCancel: _onPressEnd,
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final progress = _controller.value;
+            return SizedBox(
+              width: 96,
+              height: 96,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  // Gelombang konsentris saat tombol ditekan
+                  if (_isHolding) ...[
+                    _buildWaveRing(progress, 0.0),
+                    _buildWaveRing(progress, 0.33),
+                    _buildWaveRing(progress, 0.66),
+                    // Indikator progres lingkar luar
+                    SizedBox(
+                      width: 76,
+                      height: 76,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 3.5,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.awas,
+                        ),
+                        backgroundColor: AppColors.awas.withValues(alpha: 0.15),
                       ),
                     ),
                   ],
-                ),
-              ],
-            ),
-          );
-        },
+                  // Pembungkus bulat warna merah dengan icon danger
+                  Transform.scale(
+                    scale: _isHolding ? 0.95 : 1.0,
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.awas,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.awas.withValues(
+                              alpha: _isHolding ? 0.6 : 0.4,
+                            ),
+                            blurRadius: _isHolding ? 16 : 10,
+                            spreadRadius: _isHolding ? 3 : 0,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.warning_rounded,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
