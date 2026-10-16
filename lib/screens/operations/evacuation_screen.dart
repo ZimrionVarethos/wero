@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import 'widgets/admin_facility_dialog.dart';
+import 'widgets/evacuation_filter_sheet.dart';
 import 'widgets/evacuation_map_view.dart';
 import 'widgets/facility_card.dart';
 import 'widgets/facility_detail_sheet.dart';
@@ -30,13 +31,6 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
   bool _isMapView = true;
   EvacuationPoint? _selectedRoutePoint;
   LatLng _userLocation = const LatLng(-7.7956, 110.3695);
-
-  static const _kinds = [
-    (null, 'Semua'),
-    ('SHELTER', 'Shelter'),
-    ('HEALTH', 'Kesehatan'),
-    ('ASSEMBLY', 'Titik Kumpul'),
-  ];
 
   @override
   void dispose() {
@@ -64,6 +58,14 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
     );
   }
 
+  void _showFilterSheet() {
+    EvacuationFilterSheet.show(
+      context,
+      currentKind: _selectedKind,
+      onApply: (kind) => setState(() => _selectedKind = kind),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final query = EvacuationQuery(
@@ -75,7 +77,7 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
       appBar: AppHeader(
-        title: 'Posko Evakuasi',
+        title: 'Maps',
         actions: [
           IconButton(
             tooltip: 'Tambah Posko Baru (Admin)',
@@ -88,22 +90,36 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
               currentLocation: _userLocation,
             ),
           ),
-          TextButton.icon(
-            onPressed: () => setState(() => _isMapView = !_isMapView),
+          IconButton(
+            tooltip: _isMapView ? 'Tampilan Daftar' : 'Tampilan Peta',
             icon: Icon(
               _isMapView
                   ? Icons.format_list_bulleted_rounded
                   : Icons.map_rounded,
-              size: 18,
+              color: AppColors.primaryNavy,
             ),
-            label: Text(_isMapView ? 'Daftar' : 'Peta'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.chartBlue),
+            onPressed: () => setState(() => _isMapView = !_isMapView),
+          ),
+          IconButton(
+            tooltip: 'Filter Fasilitas',
+            icon: Badge(
+              isLabelVisible: _selectedKind != null,
+              backgroundColor: AppColors.accentOrange,
+              smallSize: 8,
+              child: Icon(
+                Icons.tune_rounded,
+                color: _selectedKind != null
+                    ? AppColors.accentOrange
+                    : AppColors.primaryNavy,
+              ),
+            ),
+            onPressed: _showFilterSheet,
           ),
         ],
       ),
       body: Column(
         children: [
-          _buildSearchAndFilters(),
+          _buildSearchBar(),
           Expanded(
             child: pointsAsync.when(
               data: (points) => _isMapView
@@ -131,65 +147,47 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
     );
   }
 
-  Widget _buildSearchAndFilters() {
+  Widget _buildSearchBar() {
     return Container(
       color: AppColors.surface,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.pagePadding,
-        vertical: AppSpacing.sm,
+        vertical: 8,
       ),
-      child: Column(
-        children: [
-          Container(
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.canvasBlue,
-              borderRadius: BorderRadius.circular(AppRadius.button),
+      child: Container(
+        height: 40,
+        decoration: BoxDecoration(
+          color: AppColors.canvasBlue,
+          borderRadius: BorderRadius.circular(AppRadius.button),
+        ),
+        child: TextField(
+          controller: _searchController,
+          style: AppTextStyles.body.copyWith(fontSize: 13),
+          decoration: InputDecoration(
+            hintText: 'Cari nama posko atau jalan...',
+            hintStyle: AppTextStyles.caption,
+            prefixIcon: const Icon(
+              Icons.search,
+              size: 19,
+              color: AppColors.textSecondary,
             ),
-            child: TextField(
-              controller: _searchController,
-              style: AppTextStyles.body.copyWith(fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Cari nama posko atau jalan...',
-                hintStyle: AppTextStyles.caption,
-                prefixIcon: const Icon(
-                  Icons.search,
-                  size: 20,
-                  color: AppColors.textSecondary,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-              onSubmitted: (val) => setState(() => _searchQuery = val.trim()),
-            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear_rounded, size: 16),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 9),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _kinds.map((k) {
-                final isSelected = _selectedKind == k.$1;
-                return Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.xs),
-                  child: ChoiceChip(
-                    label: Text(
-                      k.$2,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isSelected
-                            ? Colors.white
-                            : AppColors.textPrimary,
-                      ),
-                    ),
-                    selected: isSelected,
-                    selectedColor: AppColors.textPrimary,
-                    onSelected: (_) => setState(() => _selectedKind = k.$1),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+          onChanged: (val) {
+            setState(() => _searchQuery = val.trim());
+          },
+          onSubmitted: (val) => setState(() => _searchQuery = val.trim()),
+        ),
       ),
     );
   }
