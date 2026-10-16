@@ -87,7 +87,7 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                 AppSpacing.pagePadding,
                 AppSpacing.sm,
                 AppSpacing.pagePadding,
-                AppSpacing.xl,
+                AppSpacing.xxl + 8,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
