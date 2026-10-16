@@ -1,136 +1,241 @@
 <p align="center">
-  <img src="assets/images/logodantulisan.png" alt="Wero" width="280">
+  <img src="assets/images/logodantulisan.png" alt="Wero - Emergency & Disaster Preparedness" width="300">
 </p>
 
 <h3 align="center">Tahu apa yang terjadi. Tahu ke mana harus pergi.</h3>
 
 <p align="center">
-  Aplikasi kesiapsiagaan bencana untuk warga Indonesia.<br>
-  Peringatan untuk wilayahmu, peta evakuasi yang tetap terbuka saat sinyal hilang, dan tombol SOS yang langsung terpantau petugas wilayah.
+  Platform kesiapsiagaan dan tanggap darurat bencana berbasis spasial dan komunitas untuk Indonesia.<br>
+  Peringatan dini otomatis BMKG, peta evakuasi offline mandiri sinyal, tombol darurat SOS relawan terdekat, serta dasbor komando terverifikasi.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.x-12263F?style=flat-square&logo=flutter&logoColor=white" alt="Flutter">
-  <img src="https://img.shields.io/badge/Next.js-16-12263F?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js">
-  <img src="https://img.shields.io/badge/Supabase-PostGIS-12263F?style=flat-square&logo=supabase&logoColor=white" alt="Supabase">
-  <img src="https://img.shields.io/badge/Android-APK-E8590C?style=flat-square&logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/Flutter-3.24+-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter">
+  <img src="https://img.shields.io/badge/Next.js-16.4-black?style=flat-square&logo=nextdotjs&logoColor=white" alt="Next.js">
+  <img src="https://img.shields.io/badge/Supabase-PostGIS-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/Google_Gemini-Flash_AI-4285F4?style=flat-square&logo=google&logoColor=white" alt="Google Gemini">
+  <img src="https://img.shields.io/badge/Firebase-FCM_v1-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Firebase">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
 </p>
 
 <p align="center">
-  <a href="#kenapa-wero">Kenapa Wero</a> ·
-  <a href="#yang-bisa-dilakukan">Fitur</a> ·
-  <a href="#dasbor-petugas">Dasbor petugas</a> ·
-  <a href="#menjalankan-di-komputer-sendiri">Menjalankan</a> ·
-  <a href="#deploy">Deploy</a>
+  <a href="#-latar-belakang--masalah">Latar Belakang</a> ·
+  <a href="#-alur-kerja-sistem-architecture--flow">Arsitektur & Flow</a> ·
+  <a href="#-fitur-unggulan">Fitur Unggulan</a> ·
+  <a href="#-tech-stack">Tech Stack</a> ·
+  <a href="#-dasbor-petugas--pusat-komando">Dasbor Petugas</a> ·
+  <a href="#-instalasi--panduan-menjalankan">Panduan Menjalankan</a> ·
+  <a href="#-keamanan--privasi-data">Keamanan & Privasi</a>
 </p>
 
-<br>
+---
 
-## Kenapa Wero
+## 📌 Latar Belakang & Masalah
 
-Indonesia hidup berdampingan dengan gempa, banjir, tsunami, dan longsor. Saat bencana datang, masalahnya sering bukan kurang informasi, tapi informasinya datang terlambat, tidak relevan dengan lokasi kita, atau hilang begitu sinyal putus.
+Indonesia berada di kawasan *Ring of Fire* yang setiap saat menghadapi ancaman gempa bumi tektonik, tsunami, banjir bandang, erupsi vulkanik, dan tanah longsor. Dalam penanganan darurat bencana di lapangan, terdapat 3 kendala fatal:
 
-Di jam-jam pertama, bantuan resmi sering belum tiba. Orang yang paling dekat dengan korban biasanya tetangganya sendiri. Wero dibuat untuk menjembatani dua hal itu. Warga dibantu untuk tahu harus berbuat apa dan ke mana, sementara petugas wilayah bisa melihat siapa yang butuh pertolongan tanpa membuka data pribadi ke sembarang orang.
+1. **Infrastruktur Telekomunikasi Runtuh (Zero Signal Dilemma)**: Sesaat setelah bencana besar, BTS seluler roboh atau listrik padam. Aplikasi pemetaan umum gagal memuat peta dan rute evakuasi.
+2. **Keterlambatan Penolong Pertama (Golden Time Loss)**: Petugas evakuasi resmi (Basarnas/BPBD) membutuhkan waktu mobilisasi ke titik lokasi. Korban paling berpeluang selamat apabila ditolong oleh warga atau relawan dalam radius terdekat di jam pertama.
+3. **Peringatan yang Terlambat & Tidak Terarah**: Notifikasi sering terlambat masuk, atau berupa informasi umum yang tidak memberikan instruksi taktis tindakan langsung.
 
-## Yang bisa dilakukan
+**Wero** (*We Relief Operations*) dirancang sebagai ekosistem penyelamatan terintegrasi antara **Warga**, **Relawan Sekitar**, dan **Pusat Komando Petugas** yang tetap berfungsi optimal bahkan saat koneksi internet terputus total.
 
-| Fitur | Yang terjadi di aplikasi |
-| :--- | :--- |
-| **Peringatan sesuai lokasi** | Gempa terbaru dari BMKG dan siaran resmi petugas untuk wilayah yang dipilih pengguna, lengkap dengan tingkat status (AWAS, SIAGA, WASPADA) dan langkah yang perlu dilakukan. |
-| **Peta evakuasi offline** | Titik kumpul, shelter, dan fasilitas kesehatan diunduh saat ada sinyal, lalu tetap bisa dibuka saat jaringan mati. |
-| **SOS** | Tekan tahan untuk meminta bantuan, mode publik atau privat. GPS wajib aktif, dan lokasi tepat hanya terbuka untuk petugas wilayah yang berwenang. |
-| **Asisten bencana** | Tanya cara menghadapi gempa atau banjir. Jawaban mengikuti protokol BNPB, BMKG, dan Basarnas, dan tetap ada panduan statis saat offline. |
+---
 
-Selain itu ada feed komunitas lokal dengan moderasi, check-in keselamatan keluarga, daftar nomor darurat, dan checklist tas siaga.
+## 🔄 Alur Kerja Sistem (Architecture & Flow)
 
-## Dasbor petugas
-
-Bagian web punya dua wajah. Halaman publik di `/` menjelaskan aplikasi dan menyediakan unduhan APK, lengkap dengan ilustrasi 3D kota pesisir untuk skenario gempa, tsunami, dan banjir. Dasbor di `/admin` khusus untuk petugas wilayah.
-
-- **Ringkasan.** SOS yang menunggu penolong selalu di paling atas, ditambah angka singkat dan aktivitas terbaru.
-- **Pemantauan SOS.** Peta dan daftar kasus berdampingan. Peta hanya menunjukkan lokasi perkiraan. Lokasi tepat baru terbuka saat kasus dibuka, dan pembukaannya tercatat.
-- **Titik evakuasi.** Tambah atau ubah titik langsung dari peta. Penghapusan selalu minta konfirmasi.
-- **Siaran peringatan.** Draf, pratinjau notifikasi, lalu konfirmasi. Admin wilayah hanya bisa menyiarkan ke wilayahnya sendiri.
-- **Moderasi komunitas.** Tinjau unggahan yang dilaporkan warga.
-- **Log audit.** Setiap tindakan sensitif tercatat dengan rantai hash, jadi perubahan diam-diam bisa ketahuan.
-
-Akses diatur lewat peran di tabel `user_roles`. `SUPER_ADMIN` melihat semua wilayah, `GOVERNMENT_ADMIN` hanya wilayahnya ditambah zona penyangga di perbatasan, dan `COMMUNITY_MODERATOR` hanya antrean moderasi.
-
-## Cara kerjanya
-
+### 1. Siklus Peringatan Otomatis BMKG & Push Alert 4-Tier
 ```mermaid
-flowchart LR
-  BMKG[Data BMKG] --> API[Server web]
-  API --> HP[Aplikasi warga]
-  HP -->|tekan tahan SOS| DB[(Supabase)]
-  DB --> Warga[Warga sekitar<br>lokasi perkiraan]
-  DB --> Petugas[Dasbor petugas<br>lokasi tepat, tercatat]
-  Petugas -->|siaran wilayah| HP
+sequenceDiagram
+    autonumber
+    participant BMKG as Server BMKG TEWS
+    participant Cron as Supabase pg_cron (2 Menit)
+    participant API as Web API /api/bmkg/cron
+    participant DB as Supabase PostgreSQL
+    participant FCM as Firebase Cloud Messaging
+    participant Mobile as Aplikasi Wero Warga
+
+    Cron->>API: HTTP Trigger autonomous check
+    API->>BMKG: Fetch autogempa.json terkini
+    BMKG-->>API: Data magnitudo, koordinat, potensi tsunami
+    API->>DB: Ingest ke public.disaster_events
+    API->>FCM: Dispatch push notifikasi darurat (HTTP v1)
+    FCM-->>Mobile: High-priority Push (Heads-up alert)
+    DB-->>Mobile: Realtime WebSocket Postgres Changes
+    Note over Mobile: Deduplikasi ID mencegah sirine ganda.<br>Aktifkan audio sirine + getaran hardware ritmik.<br>Log masuk seketika tanpa jeda.
 ```
 
-## Isi repositori
+### 2. Siklus SOS Warga & Respon Relawan Terdekat
+```mermaid
+flowchart TD
+    A[Warga Dalam Bahaya] -->|Tekan Tahan Tombol SOS 2 Detik| B(GPS Terkunci Presisi)
+    B --> C{Pilihan Mode SOS}
+    C -->|Publik| D[Siaran Radius 100 Meter]
+    C -->|Privat| E[Hanya Masuk ke Dasbor Petugas]
 
+    D --> F[Marker Merah Berdenyut di Peta Warga Lain]
+    F --> G[Warga/Relawan Ketuk Titik Korban]
+    G --> H[Pilih: Ambil Aksi Tolong]
+    H --> I[Navigasi Rute Langsung ke Korban]
+    
+    D --> J[Dasbor Petugas BPBD/Relawan]
+    E --> J
+    J --> K[Petugas Verifikasi & Kerahkan Bantuan]
+    K --> L[Admin Tandai: Bantuan Tuntas]
+    L -->|Sinkronisasi Realtime| M[Status SOS di HP Korban Otomatis Selesai & Aman]
 ```
-wero/
-├── lib/                      aplikasi Flutter (Android, iOS, web)
-├── assets/                   logo dan gambar aplikasi
-├── test/                     pengujian Flutter
-├── web/                      Next.js, halaman publik, dasbor petugas, dan API
-│   ├── src/app/admin/        dasbor petugas
-│   ├── src/app/api/          API untuk aplikasi dan dasbor
-│   └── src/components/       komponen UI, peta, dan ilustrasi 3D
-├── supabase/
-│   ├── migrations/           skema database, RLS, dan fungsi
-│   └── admin_roles_setup.sql pemberian peran petugas, dijalankan manual
-└── siagaku_design_skills/    pedoman desain yang dipakai untuk UI
+
+### 3. Arsitektur Peta Evakuasi Offline (Zero-Signal Resilience)
+```mermaid
+graph LR
+    Online[Saat Terhubung Internet] -->|Unduh Radius 15 KM| CacheEngine[EvacuationCacheService]
+    CacheEngine --> MapTiles[(Cache Mapbox Tiles)]
+    CacheEngine --> Shelters[(Cache Posko & Faskes)]
+    CacheEngine --> Guides[(Cache Panduan Darurat)]
+
+    Offline[Saat Sinyal Hilang Total] --> Reader[Offline Map View]
+    MapTiles -.-> Reader
+    Shelters -.-> Reader
+    Guides -.-> Reader
+    Reader --> SafeAction[Warga Tetap Tahu Arah Shelter & Titik Kumpul Aman]
 ```
 
-Dibangun dengan Flutter, Riverpod, dan flutter_map di sisi aplikasi. Bagian web memakai Next.js 16, React 19, Tailwind CSS 4, MapLibre, dan Three.js. Data disimpan di Supabase (PostgreSQL dan PostGIS), notifikasi lewat Firebase Cloud Messaging, dan asisten memakai Gemini lewat server, jadi kuncinya tidak pernah ada di aplikasi.
+---
 
-## Menjalankan di komputer sendiri
+## ✨ Fitur Unggulan
 
-Yang dibutuhkan: Flutter 3.24 atau lebih baru, Node.js 20 atau lebih baru, dan project Supabase.
+| Modul | Deskripsi Solusi | Implementasi Teknis |
+| :--- | :--- | :--- |
+| **Peta Evakuasi Offline** | Mengunduh peta ubin (tile) radius 15 km beserta metadata posko evakuasi & rute. Tetap interaktif dan akurat saat sinyal mati. | `flutter_map_cache`, local storage caching, spatial distance sorting. |
+| **Multi-Tier BMKG Early Warning** | Klasifikasi ancaman otomatis 4 tingkat: **AWAS** (M≥7.0 / Tsunami), **SIAGA** (M≥6.0), **WASPADA** (M≥5.0), dan **INFO** disertai instruksi penyelamatan BNPB. | Parsing real-time BMKG TEWS, kalkulasi magnitudo & kedalaman, audio loop alarm, hardware vibrator channel. |
+| **Tombol Darurat SOS & Relawan** | Mode publik membunyikan radar 100m ke sesama warga sekitar. Relawan dapat mengambil misi tolong dan menerima navigasi rute langsung ke titik korban. | PostGIS spatial queries, animated pulse markers, Realtime broadcast synchronizer. |
+| **Asisten Siaga AI (Gemini Flash)** | Tanya-jawab taktis pertolongan pertama, simulasi gempa, atau panduan evakuasi. Dilengkapi fallback panduan offline saat internet padam. | Google Gemini Flash via backend proxy API, context-grounded prompt, offline protocol fallback. |
+| **Log Notifikasi Interaktif** | Riwayat siaran dapat dibaca per balok dan mendukung gestur geser untuk menghapus (*swipe-to-dismiss*), yang seketika mengheningkan sirine aktif. | Dismissible card, atomic deduplication, `NotificationDismissService` persistent storage. |
+| **Dasbor Komando Multi-Peran** | Monitoring SOS terpusat, siaran manual per wilayah, manajemen titik evakuasi spasial, serta audit trail dengan rantai kriptografi hash. | Next.js 16, MapLibre GL, Three.js 3D Coastal Simulation, Role-Based Access Control (RBAC). |
 
-**Web dan API**
+---
 
+## 💻 Tech Stack
+
+### 📱 Mobile Application (Flutter)
+- **Framework**: Flutter 3.24+ (Dart 3.5+)
+- **State Management**: Flutter Riverpod 2.5 (`NotifierProvider`, `AsyncNotifier`, family providers)
+- **Routing**: GoRouter (Declarative typed routing)
+- **Mapping & Geospasial**: `flutter_map` v7, `latlong2`, Mapbox GL Raster Tiles, `geolocator`
+- **Audio & Haptic**: `audioplayers` (Streamed loop alarm), Android Native MethodChannel (`com.siagaku.wero/vibration`)
+- **Desain & Tipografi**: Google Fonts Poppins, Desain visual bertema Navy & Safety Orange sesuai `design.md`
+
+### 🌐 Web & Dasbor Komando (Next.js)
+- **Framework**: Next.js 16.4 (App Router, Turbopack) & React 19
+- **Styling**: Tailwind CSS 4, Vanilla CSS Design Tokens
+- **Peta Dasbor**: MapLibre GL, Mapbox API
+- **Visualisasi 3D**: Three.js (Simulasi kota pesisir, tsunami, dan gempa)
+- **Koneksi Database**: `pg` Connection Pooler via Port 6543 (Transaction Mode)
+
+### ☁️ Backend, Cloud & Database
+- **Database Utama**: Supabase PostgreSQL 15 dengan ekstensi **PostGIS**
+- **Autonomous Worker**: Supabase `pg_cron` & `pg_net` (Pengecekan gempa berkala tiap 2 menit tanpa beban server eksternal)
+- **Push Notification**: Firebase Cloud Messaging (FCM HTTP v1 via Service Account Admin)
+- **Kecerdasan Buatan**: Google Gemini AI API (`gemini-flash-lite-latest`)
+- **Hosting Web & API**: Vercel Serverless Platform
+- **CI/CD Pipeline**: GitHub Actions (`build_ios.yml`, `bmkg_cron.yml`)
+
+---
+
+## 🛡️ Dasbor Petugas & Pusat Komando
+
+Pusat kendali petugas dapat diakses melalui rute `/admin` pada web portal dengan sistem autentikasi dan peran berbasis wewenang:
+
+1. **Role-Based Scoping**:
+   - `SUPER_ADMIN`: Memantau dan mengelola siaran ke seluruh wilayah nasional Indonesia.
+   - `GOVERNMENT_ADMIN` (BPBD Kota/Kabupaten): Hanya dapat menyiarkan informasi dan memantau status darurat di yurisdiksi wilayahnya.
+   - `COMMUNITY_MODERATOR`: Mengelola pelaporan postingan warga di forum komunitas.
+2. **Kerahasiaan Lokasi Korban (Privacy Safeguards)**:
+   - Pada pemantauan umum, koordinat korban disamarkan (*fuzzy coordinates*).
+   - Koordinat presisi hanya terbuka saat petugas resmi membuka detail kasus, dan setiap aksi pembukaan lokasi tepat dicatat ke tabel `audit_logs`.
+3. **Audit Trail Berantai Kriptografi**:
+   - Setiap aksi penting (siaran darurat, resolusi kasus SOS, penghapusan data) di-hash bersama hash rekaman sebelumnya (*cryptographic chain hash*) sehingga manipulasi log dapat dideteksi.
+
+---
+
+## 🚀 Panduan Menjalankan
+
+### Persyaratan Lingkungan:
+- Flutter SDK (≥ 3.24.0) & Dart SDK
+- Node.js (≥ 20.0.0) & npm
+- Akun Supabase (PostgreSQL)
+
+### 1. Menjalankan Backend & Web Admin
 ```bash
+# Masuk ke direktori web
 cd web
+
+# Pasang dependensi
 npm install
+
+# Buat file konfigurasi lokal
 cp .env.example .env.local
+```
+
+Sesuaikan nilai environment di `web/.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+DATABASE_URL=postgresql://postgres.xxx:password@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres
+NEXT_PUBLIC_MAPBOX_TOKEN=pk.your-mapbox-token
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-flash-lite-latest
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
+```
+
+Jalankan server pengembangan:
+```bash
 npm run dev
 ```
+- Landing Page & APK Download: `http://localhost:3000`
+- Dasbor Petugas: `http://localhost:3000/admin`
 
-Isi `.env.local` sesuai keterangan di `web/.env.example`. Minimal `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `DATABASE_URL`. Halaman publik terbuka di `http://localhost:3000` dan dasbor di `http://localhost:3000/admin`.
+### 2. Mengaktifkan Autonomous Worker BMKG (Supabase SQL)
+Jalankan skrip berikut di **SQL Editor Supabase**:
+```sql
+create extension if not exists pg_net;
+create extension if not exists pg_cron;
 
-Supaya bisa masuk dasbor, beri peran ke akun petugas dengan menjalankan `supabase/admin_roles_setup.sql` di SQL editor Supabase. Ganti dulu email dan kode wilayah di dalamnya.
-
-**Aplikasi**
-
-```bash
-flutter pub get
-flutter run --dart-define=BACKEND_URL=http://10.0.2.2:3000
+select cron.schedule(
+  'wero-bmkg-sync-every-2min',
+  '*/2 * * * *',
+  $$ select net.http_get(url := 'https://your-domain.vercel.app/api/bmkg/cron'); $$
+);
 ```
 
-`10.0.2.2` adalah alamat komputer kita dari dalam emulator Android. Untuk perangkat fisik, ganti dengan IP komputer di jaringan yang sama. Tanpa `BACKEND_URL`, aplikasi memakai alamat produksi yang tertulis di `lib/core/config/app_config.dart`. Nilai `SUPABASE_URL` dan `SUPABASE_ANON_KEY` juga bisa diganti lewat `--dart-define`.
+### 3. Menjalankan Aplikasi Mobile (Flutter)
+```bash
+# Kembali ke direktori utama
+cd ..
 
-## Deploy
+# Ambil dependensi
+flutter pub get
 
-Web dideploy ke Vercel dengan **Root Directory** diisi `web`. Pengaturan framework dan build bisa dibiarkan default. Masukkan variabel dari `web/.env.example` ke Environment Variables. Untuk `DATABASE_URL`, pakai connection pooler Supabase mode transaction (port 6543) karena lebih cocok untuk serverless.
+# Jalankan pada Android Emulator / Device fisik
+flutter run --dart-define=BACKEND_URL=https://wero-mu.vercel.app
 
-Setelah domain Vercel jadi, perbarui `BACKEND_URL` di aplikasi lalu build ulang APK, supaya asisten, data BMKG, dan deteksi wilayah mengarah ke server yang benar.
+# Atau compile Release APK
+flutter build apk --release --no-tree-shake-icons
+```
+Output APK berada di `build/app/outputs/flutter-apk/app-release.apk`.
 
-## Soal privasi
+---
 
-Lokasi saat darurat adalah data yang sangat sensitif, jadi Wero memperlakukannya dengan hati-hati.
+## 🔒 Keamanan & Privasi Data
 
-- Koordinat tepat disimpan terpisah dari lokasi perkiraan. Dasbor hanya menampilkan perkiraan sampai petugas membuka kasusnya.
-- Petugas hanya melihat kasus di wilayah tugasnya, dan setiap pembukaan lokasi tepat tercatat atas nama petugas itu.
-- Kunci rahasia seperti kredensial database dan kunci Gemini hanya ada di server, dibaca dari environment variable.
-- Asisten tidak menggantikan petugas. Dalam keadaan darurat, tetap hubungi **112** dan ikuti arahan petugas setempat.
+- **Penyimpanan Kunci API Terlindungi**: Kredensial sensitif seperti Service Account Firebase, Database Pooler Connection, dan Gemini API Key tersimpan aman di environment server dan tidak pernah terekspos di sisi klien.
+- **Enkripsi Transit & Istirahat**: Semua komunikasi mobile ke backend dilindungi enkripsi HTTPS / TLS 1.3, dan data tersimpan menerapkan Row Level Security (RLS) PostgreSQL.
+- **Standar Protokol Kebencanaan**: Semua konten edukasi, respon peringatan dini, dan alur evakuasi diselaraskan dengan panduan resmi BNPB, BMKG, dan Basarnas.
 
-<br>
+---
 
 <p align="center">
-  <img src="assets/images/logo.png" alt="" width="40"><br>
-  <sub>Wero. Tanggap bersama, selamatkan sesama.</sub>
+  <img src="assets/images/logo.png" alt="Wero Icon" width="48"><br>
+  <b>Wero</b> · Tanggap Bersama, Selamatkan Sesama.<br>
+  <sub>Dikembangkan untuk Solusi Kemanusiaan & Kesiapsiagaan Bencana Indonesia.</sub>
 </p>
