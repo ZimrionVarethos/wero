@@ -123,7 +123,7 @@ graph LR
 - **Routing**: GoRouter (Declarative typed routing)
 - **Mapping & Geospasial**: `flutter_map` v7, `latlong2`, Mapbox GL Raster Tiles, `geolocator`
 - **Audio & Haptic**: `audioplayers` (Streamed loop alarm), Android Native MethodChannel (`com.siagaku.wero/vibration`)
-- **Desain & Tipografi**: Google Fonts Poppins, Desain visual bertema Navy & Safety Orange sesuai `design.md`
+- **Desain & Tipografi**: Google Fonts Poppins, Desain visual bertema Navy & Safety Orange
 
 ### 🌐 Web & Dasbor Komando (Next.js)
 - **Framework**: Next.js 16.4 (App Router, Turbopack) & React 19
