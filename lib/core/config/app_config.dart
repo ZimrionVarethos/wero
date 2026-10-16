@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 /// Can be overridden via --dart-define at build/run time:
 /// flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
 abstract final class AppConfig {
-  static const String appName = 'Siagaku';
+  static const String appName = 'Wero';
 
   /// Supabase project URL.
   static const String supabaseUrl = String.fromEnvironment(

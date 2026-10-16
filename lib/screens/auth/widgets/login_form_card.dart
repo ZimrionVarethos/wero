@@ -111,7 +111,7 @@ class _LoginFormCardState extends ConsumerState<LoginFormCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _isSignUp ? 'Daftar Akun Baru' : 'Masuk ke Siagaku',
+              _isSignUp ? 'Daftar Akun Baru' : 'Masuk ke Wero',
               style: AppTextStyles.screenTitle.copyWith(
                 color: AppColors.primaryNavy,
                 fontWeight: FontWeight.w800,

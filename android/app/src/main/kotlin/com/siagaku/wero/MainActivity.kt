@@ -74,7 +74,7 @@ class MainActivity : FlutterActivity() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channelId = "emergency_alerts_v2"
-            val channelName = "Peringatan Darurat Siagaku"
+            val channelName = "Peringatan Darurat Wero"
             val channelDescription = "Kanal notifikasi peringatan bencana dan evakuasi darurat"
             val importance = NotificationManager.IMPORTANCE_HIGH
             

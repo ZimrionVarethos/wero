@@ -227,6 +227,7 @@ class _BmkgPlaytestDialogState extends ConsumerState<BmkgPlaytestDialog> {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: () {
+              _alarmService.stopEmergencyAlarm();
               Navigator.pop(context);
               context.push(AppRoutes.evacuation);
             },

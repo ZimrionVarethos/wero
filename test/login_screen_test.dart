@@ -30,7 +30,7 @@ void main() {
 
       // Verify authentication form card is displayed
       expect(find.byType(LoginFormCard), findsOneWidget);
-      expect(find.text('Masuk ke Siagaku'), findsOneWidget);
+      expect(find.text('Masuk ke Wero'), findsOneWidget);
       expect(find.text('Masuk Cepat (Akun Demo)'), findsOneWidget);
     },
   );
@@ -45,7 +45,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Masuk ke Siagaku'), findsOneWidget);
+    expect(find.text('Masuk ke Wero'), findsOneWidget);
     expect(find.text('Belum punya akun? Daftar sekarang'), findsOneWidget);
 
     // Tap toggle button to switch to Sign Up

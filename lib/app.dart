@@ -17,7 +17,7 @@ class WeroApp extends ConsumerWidget {
     final activeAlert = ref.watch(activeBroadcastAlertProvider);
 
     return MaterialApp.router(
-      title: 'Siagaku / Wero',
+      title: 'Wero',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       routerConfig: router,

@@ -19,7 +19,7 @@ class AppLogo extends StatelessWidget {
       'assets/images/logodantulisan.png',
       height: height,
       fit: BoxFit.contain,
-      semanticLabel: 'Siagaku Logo',
+      semanticLabel: 'Wero Logo',
       errorBuilder: (context, error, stackTrace) {
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -31,7 +31,7 @@ class AppLogo extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'Siagaku',
+              'Wero',
               style: AppTextStyles.sectionTitle.copyWith(
                 fontWeight: FontWeight.w800,
                 color: AppColors.primaryNavy,

@@ -11,7 +11,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Unauthenticated users are strictly guarded and redirected to LoginScreen
-      expect(find.text('Masuk ke Siagaku'), findsOneWidget);
+      expect(find.text('Masuk ke Wero'), findsOneWidget);
     },
   );
 }

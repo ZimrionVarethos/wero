@@ -59,7 +59,7 @@ class AiOfflineEngine {
         role: ChatRole.assistant,
         text:
             '🗺️ **Informasi Lokasi Evakuasi & Titik Kumpul:**\n\n'
-            'Aplikasi Siagaku memetakan shelter resmi, titik kumpul aman, dan faskes darurat.\n\n'
+            'Aplikasi Wero memetakan shelter resmi, titik kumpul aman, dan faskes darurat.\n\n'
             'Peta interaktif dapat diakses lengkap dengan rute offline.',
         timestamp: DateTime.now(),
         isOfflineFallback: true,

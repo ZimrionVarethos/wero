@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   title: "Wero | Kesiapsiagaan Bencana di Genggaman",
   description:
     "Wero membantu warga menerima peringatan bencana sesuai lokasi, membuka peta evakuasi offline, meminta bantuan SOS, dan mempelajari panduan kebencanaan.",
+  icons: {
+    icon: [{ url: "/logo.png", type: "image/png" }],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
