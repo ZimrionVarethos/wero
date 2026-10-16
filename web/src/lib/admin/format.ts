@@ -64,6 +64,7 @@ export const AUDIT_ACTION_LABEL: Record<string, string> = {
   EVAC_UPDATED: 'Titik evakuasi diubah',
   EVAC_DELETED: 'Titik evakuasi dihapus',
   ADMIN_BROADCAST: 'Siaran peringatan',
+  BROADCAST_DELETED: 'Hapus siaran',
   MODERATION_ACTION: 'Tindakan moderasi',
   AUDIT_EXPORTED: 'Log kasus diekspor',
 };

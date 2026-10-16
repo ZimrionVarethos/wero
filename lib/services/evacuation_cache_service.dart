@@ -9,6 +9,30 @@ class EvacuationCacheService {
   const EvacuationCacheService();
 
   static const String _cacheKey = 'wero_cached_evacuation_points_v1';
+  static const String _lastLatKey = 'wero_last_synced_lat';
+  static const String _lastLngKey = 'wero_last_synced_lng';
+
+  /// Save last known or synced user location coordinates to local storage.
+  Future<void> saveLastLocation(double lat, double lng) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(_lastLatKey, lat);
+      await prefs.setDouble(_lastLngKey, lng);
+    } catch (_) {}
+  }
+
+  /// Retrieve last known or synced user coordinates if available.
+  Future<({double lat, double lng})?> getLastLocation() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lat = prefs.getDouble(_lastLatKey);
+      final lng = prefs.getDouble(_lastLngKey);
+      if (lat != null && lng != null) {
+        return (lat: lat, lng: lng);
+      }
+    } catch (_) {}
+    return null;
+  }
 
   /// Save loaded evacuation points to persistent local cache.
   Future<void> cachePoints(List<EvacuationPoint> points) async {

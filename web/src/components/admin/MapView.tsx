@@ -3,23 +3,72 @@
 import * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSource, Map as MLMap, MapMouseEvent } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-// Raster OSM base without API keys. For production traffic, point this at self-hosted or paid tiles.
-const STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: '&copy; OpenStreetMap contributors',
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
+const buildMapStyle = (): maplibregl.StyleSpecification => {
+  if (MAPBOX_TOKEN) {
+    return {
+      version: 8,
+      sources: {
+        satellite: {
+          type: 'raster',
+          tiles: [
+            `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+          ],
+          tileSize: 256,
+          maxzoom: 19,
+          attribution: '&copy; Mapbox &copy; OpenStreetMap',
+        },
+        streets: {
+          type: 'raster',
+          tiles: [
+            `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+          ],
+          tileSize: 256,
+          maxzoom: 19,
+          attribution: '&copy; Mapbox &copy; OpenStreetMap',
+        },
+      },
+      layers: [
+        {
+          id: 'satellite-base',
+          type: 'raster',
+          source: 'satellite',
+          layout: { visibility: 'visible' },
+        },
+        {
+          id: 'streets-base',
+          type: 'raster',
+          source: 'streets',
+          layout: { visibility: 'none' },
+        },
+      ],
+    };
+  }
+
+  // OpenStreetMap fallback when no Mapbox token is present
+  return {
+    version: 8,
+    sources: {
+      osm: {
+        type: 'raster',
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+      },
     },
-  },
-  layers: [
-    { id: 'osm', type: 'raster', source: 'osm', paint: { 'raster-saturation': -0.35, 'raster-contrast': 0.05 } },
-  ],
+    layers: [
+      {
+        id: 'osm',
+        type: 'raster',
+        source: 'osm',
+        paint: { 'raster-saturation': -0.35, 'raster-contrast': 0.05 },
+      },
+    ],
+  };
 };
 
 export interface MapPoint {
@@ -73,6 +122,7 @@ export default function MapView({
   const mapRef = useRef<MLMap | null>(null);
   const readyRef = useRef(false);
   const fittedRef = useRef(false);
+  const [mapMode, setMapMode] = useState<'satellite' | 'streets'>('satellite');
   const latest = useRef({ points, selectedId, pick, onSelect, onPick });
 
   const sync = () => {
@@ -94,8 +144,16 @@ export default function MapView({
 
   useEffect(() => {
     if (!ref.current) return;
-    const map = new maplibregl.Map({ container: ref.current, style: STYLE, center, zoom, attributionControl: { compact: true } });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    const style = buildMapStyle();
+    const map = new maplibregl.Map({
+      container: ref.current,
+      style,
+      center,
+      zoom,
+      pitch: 25,
+      attributionControl: { compact: true },
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: true }), 'top-right');
     mapRef.current = map;
 
     map.on('load', () => {
@@ -109,10 +167,10 @@ export default function MapView({
         filter: ['==', ['get', 'approximate'], true],
         paint: {
           'circle-color': ['get', 'color'],
-          'circle-opacity': 0.16,
+          'circle-opacity': 0.22,
           'circle-stroke-color': ['get', 'color'],
-          'circle-stroke-opacity': 0.45,
-          'circle-stroke-width': 1,
+          'circle-stroke-opacity': 0.6,
+          'circle-stroke-width': 1.5,
           'circle-radius': ['interpolate', ['exponential', 2], ['zoom'], 10, 6, 14, 40, 17, 300],
         },
       });
@@ -161,6 +219,18 @@ export default function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Update map layer visibility on toggle
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !readyRef.current || !MAPBOX_TOKEN) return;
+    if (map.getLayer('satellite-base')) {
+      map.setLayoutProperty('satellite-base', 'visibility', mapMode === 'satellite' ? 'visible' : 'none');
+    }
+    if (map.getLayer('streets-base')) {
+      map.setLayoutProperty('streets-base', 'visibility', mapMode === 'streets' ? 'visible' : 'none');
+    }
+  }, [mapMode]);
+
   // Map event handlers read the newest props through this ref.
   useEffect(() => {
     latest.current = { points, selectedId, pick, onSelect, onPick };
@@ -172,5 +242,27 @@ export default function MapView({
     if (mapRef.current) mapRef.current.getCanvas().style.cursor = onPick ? 'crosshair' : '';
   }, [onPick]);
 
-  return <div ref={ref} role="region" aria-label={label} className={`h-full w-full overflow-hidden ${className}`} />;
+  return (
+    <div className={`relative h-full w-full overflow-hidden ${className}`}>
+      {Boolean(MAPBOX_TOKEN) && (
+        <div className="absolute top-3 left-3 z-10 flex items-center rounded-lg bg-white/95 p-1 shadow-md border border-slate-200/80 backdrop-blur-xs text-xs font-semibold text-navy">
+          <button
+            type="button"
+            onClick={() => setMapMode('satellite')}
+            className={`rounded-md px-2.5 py-1 transition-colors ${mapMode === 'satellite' ? 'bg-navy text-white shadow-xs' : 'text-muted hover:text-navy'}`}
+          >
+            🛰️ Satelit Realistis
+          </button>
+          <button
+            type="button"
+            onClick={() => setMapMode('streets')}
+            className={`rounded-md px-2.5 py-1 transition-colors ${mapMode === 'streets' ? 'bg-navy text-white shadow-xs' : 'text-muted hover:text-navy'}`}
+          >
+            🗺️ Peta Jalan
+          </button>
+        </div>
+      )}
+      <div ref={ref} role="region" aria-label={label} className="h-full w-full" />
+    </div>
+  );
 }

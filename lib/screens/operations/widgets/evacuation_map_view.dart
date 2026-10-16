@@ -62,6 +62,9 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
     super.didUpdateWidget(oldWidget);
     if (widget.userLocation != oldWidget.userLocation) {
       _currentLocation = widget.userLocation;
+      if (widget.activeRoutePoint == null) {
+        _mapController.move(_currentLocation, 14.0);
+      }
     }
     final newRoute = widget.activeRoutePoint;
     if (newRoute != null &&

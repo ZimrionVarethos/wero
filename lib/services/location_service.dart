@@ -35,4 +35,31 @@ class LocationService {
 
     return LatLng(pos.latitude, pos.longitude);
   }
+
+  /// Safely attempts to fetch current device position without throwing exceptions.
+  /// Returns null if GPS is disabled, permission denied, or request times out.
+  Future<LatLng?> tryGetCurrentPosition({
+    Duration timeout = const Duration(seconds: 4),
+  }) async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return null;
+
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return null;
+      }
+
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: timeout,
+        ),
+      );
+      return LatLng(pos.latitude, pos.longitude);
+    } catch (_) {
+      return null;
+    }
+  }
 }

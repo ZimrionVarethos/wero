@@ -7,9 +7,12 @@ import '../../models/evacuation_point.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../services/evacuation_cache_service.dart';
+import '../../services/location_service.dart';
 import 'widgets/admin_facility_dialog.dart';
 import 'widgets/evacuation_filter_sheet.dart';
 import 'widgets/evacuation_map_view.dart';
+import 'widgets/evacuation_search_bar.dart';
 import 'widgets/facility_card.dart';
 import 'widgets/facility_detail_sheet.dart';
 import '../../widgets/app_header.dart';
@@ -31,6 +34,28 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
   bool _isMapView = true;
   EvacuationPoint? _selectedRoutePoint;
   LatLng _userLocation = const LatLng(-7.7956, 110.3695);
+
+  @override
+  void initState() {
+    super.initState();
+    _initLocationState();
+  }
+
+  Future<void> _initLocationState() async {
+    const cacheService = EvacuationCacheService();
+    final last = await cacheService.getLastLocation();
+    if (last != null && mounted) {
+      setState(() => _userLocation = LatLng(last.lat, last.lng));
+    }
+    final realTime = await const LocationService().tryGetCurrentPosition();
+    if (realTime != null && mounted) {
+      setState(() => _userLocation = realTime);
+      await cacheService.saveLastLocation(
+        realTime.latitude,
+        realTime.longitude,
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -119,7 +144,14 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
       ),
       body: Column(
         children: [
-          _buildSearchBar(),
+          EvacuationSearchBar(
+            controller: _searchController,
+            onChanged: (val) => setState(() => _searchQuery = val.trim()),
+            onClear: () {
+              _searchController.clear();
+              setState(() => _searchQuery = '');
+            },
+          ),
           Expanded(
             child: pointsAsync.when(
               data: (points) => _isMapView
@@ -127,8 +159,13 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
                       points: points,
                       activeRoutePoint: _selectedRoutePoint,
                       userLocation: _userLocation,
-                      onLocationSynced: (loc) =>
-                          setState(() => _userLocation = loc),
+                      onLocationSynced: (loc) {
+                        setState(() => _userLocation = loc);
+                        const EvacuationCacheService().saveLastLocation(
+                          loc.latitude,
+                          loc.longitude,
+                        );
+                      },
                       onClearRoute: () =>
                           setState(() => _selectedRoutePoint = null),
                       onPointSelected: _showDetailSheet,
@@ -143,51 +180,6 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Container(
-      color: AppColors.surface,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.pagePadding,
-        vertical: 8,
-      ),
-      child: Container(
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.canvasBlue,
-          borderRadius: BorderRadius.circular(AppRadius.button),
-        ),
-        child: TextField(
-          controller: _searchController,
-          style: AppTextStyles.body.copyWith(fontSize: 13),
-          decoration: InputDecoration(
-            hintText: 'Cari nama posko atau jalan...',
-            hintStyle: AppTextStyles.caption,
-            prefixIcon: const Icon(
-              Icons.search,
-              size: 19,
-              color: AppColors.textSecondary,
-            ),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear_rounded, size: 16),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                  )
-                : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 9),
-          ),
-          onChanged: (val) {
-            setState(() => _searchQuery = val.trim());
-          },
-          onSubmitted: (val) => setState(() => _searchQuery = val.trim()),
-        ),
       ),
     );
   }

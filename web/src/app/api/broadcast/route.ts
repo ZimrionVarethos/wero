@@ -129,3 +129,61 @@ export async function POST(req: NextRequest) {
     return errorResponse(error, 'Gagal mengirim siaran');
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await requireAdmin();
+    const scope = regionScope(session);
+    const url = new URL(req.url);
+    const id = url.searchParams.get('id');
+    const all = url.searchParams.get('all') === 'true';
+
+    if (id) {
+      if (!isUuid(id)) throw new HttpError(400, 'ID siaran tidak valid.');
+      const res = await pool.query<{ id: string; headline: string }>(
+        `delete from public.disaster_events
+         where id = $1::uuid
+           and source_event_id like 'MANUAL-%'
+           and ($2::uuid is null or region_id = $2::uuid or source_payload->'target_region_ids' ? $2::text)
+         returning id, headline`,
+        [id, scope],
+      );
+      if (res.rowCount === 0) {
+        throw new HttpError(404, 'Siaran tidak ditemukan atau di luar wewenang Anda.');
+      }
+      await writeAudit({
+        actorId: session.userId,
+        action: 'BROADCAST_DELETED',
+        targetType: 'DISASTER_EVENT',
+        targetId: id,
+        metadata: { headline: res.rows[0].headline },
+      });
+      return NextResponse.json({ success: true, message: 'Siaran berhasil dihapus.' });
+    }
+
+    if (all) {
+      const res = await pool.query<{ id: string }>(
+        `delete from public.disaster_events
+         where source_event_id like 'MANUAL-%'
+           and ($1::uuid is null or region_id = $1::uuid or source_payload->'target_region_ids' ? $1::text)
+         returning id`,
+        [scope],
+      );
+      await writeAudit({
+        actorId: session.userId,
+        action: 'BROADCAST_DELETED',
+        targetType: 'DISASTER_EVENT',
+        metadata: { count: res.rowCount },
+      });
+      return NextResponse.json({
+        success: true,
+        message: `${res.rowCount ?? 0} siaran berhasil dihapus.`,
+      });
+    }
+
+    throw new HttpError(400, 'Parameter id atau all=true wajib disertakan.');
+  } catch (error) {
+    return errorResponse(error, 'Gagal menghapus log siaran');
+  }
+}
+

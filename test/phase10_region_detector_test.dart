@@ -16,6 +16,11 @@ class _FakeLocationService implements LocationService {
 
   @override
   Future<LatLng> determinePosition() async => mockCoords;
+
+  @override
+  Future<LatLng?> tryGetCurrentPosition({
+    Duration timeout = const Duration(seconds: 4),
+  }) async => mockCoords;
 }
 
 void main() {

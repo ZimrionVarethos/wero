@@ -12,6 +12,7 @@ export type AuditAction =
   | 'EVAC_UPDATED'
   | 'EVAC_DELETED'
   | 'ADMIN_BROADCAST'
+  | 'BROADCAST_DELETED'
   | 'MODERATION_ACTION'
   | 'AUDIT_EXPORTED';
 

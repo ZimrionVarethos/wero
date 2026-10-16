@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useAdminData } from '@/lib/admin/use-admin-data';
-import { BellRing, CheckCircle2, CircleAlert, Megaphone, Search, Send } from 'lucide-react';
+import { BellRing, CheckCircle2, CircleAlert, Megaphone, Search, Send, Trash2 } from 'lucide-react';
 import { useAdmin } from '@/components/admin/AdminShell';
 import { Alert, Button, Card, CardHeader, ConfirmDialog, EmptyState, PageHeader, SelectField, SeverityBadge, SkeletonRows, TextArea, TextField, SEVERITY_STYLE } from '@/components/admin/ui';
 import { adminFetch, errorMessage } from '@/lib/admin/client';
@@ -33,6 +33,35 @@ export default function BroadcastPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ delivered: boolean; target: string } | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
+  const [selectedItemToDelete, setSelectedItemToDelete] = useState<BroadcastRow | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deletingBusy, setDeletingBusy] = useState(false);
+
+  const deleteBroadcast = async (id: string) => {
+    setDeletingBusy(true);
+    try {
+      await adminFetch(`/api/broadcast?id=${id}`, { method: 'DELETE' });
+      setSelectedItemToDelete(null);
+      historyQ.reload();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setDeletingBusy(false);
+    }
+  };
+
+  const clearAllBroadcasts = async () => {
+    setDeletingBusy(true);
+    try {
+      await adminFetch('/api/broadcast?all=true', { method: 'DELETE' });
+      setDeletingAll(false);
+      historyQ.reload();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setDeletingBusy(false);
+    }
+  };
 
   useEffect(() => {
     if (!me.isSuper) return;
@@ -261,7 +290,23 @@ export default function BroadcastPage() {
           </Card>
 
           <Card>
-            <CardHeader title="Riwayat siaran" description={me.isSuper ? 'Semua wilayah' : `Wilayah ${me.regionName ?? ''}`} />
+            <CardHeader
+              title="Riwayat siaran"
+              description={me.isSuper ? 'Semua wilayah' : `Wilayah ${me.regionName ?? ''}`}
+              actions={
+                history && history.length > 0 ? (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    size="sm"
+                    icon={Trash2}
+                    onClick={() => setDeletingAll(true)}
+                  >
+                    Hapus Semua Log
+                  </Button>
+                ) : null
+              }
+            />
             {history === null ? (
               <SkeletonRows rows={3} />
             ) : history.length === 0 ? (
@@ -269,22 +314,32 @@ export default function BroadcastPage() {
             ) : (
               <ul className="divide-y divide-border-neutral">
                 {history.map((b) => (
-                  <li key={b.id} className="px-5 py-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <SeverityBadge level={b.severity} />
-                      <span className="text-xs font-semibold text-muted">{HAZARD_LABEL[b.disaster_type] ?? b.disaster_type}</span>
-                      <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-aman">
-                        <CheckCircle2 className="size-3.5" aria-hidden /> Terkirim
-                      </span>
+                  <li key={b.id} className="group flex items-start justify-between gap-3 px-5 py-4 hover:bg-cream/40 transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <SeverityBadge level={b.severity} />
+                        <span className="text-xs font-semibold text-muted">{HAZARD_LABEL[b.disaster_type] ?? b.disaster_type}</span>
+                        <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-aman">
+                          <CheckCircle2 className="size-3.5" aria-hidden /> Terkirim
+                        </span>
+                      </div>
+                      <p className="mt-1.5 font-semibold text-navy">{b.headline}</p>
+                      {b.message ? <p className="mt-0.5 text-sm text-muted">{b.message}</p> : null}
+                      <p className="mt-1.5 text-xs text-muted">
+                        {formatDateTime(b.created_at)}
+                        {b.sent_by ? `, oleh ${b.sent_by}` : ''}, tujuan{' '}
+                        {b.target_type === 'ALL' ? 'nasional' : b.target_regions?.length ? b.target_regions.join(', ') : 'tidak tercatat'}
+                        {b.fcm && !b.fcm.delivered ? ', push gagal' : ''}
+                      </p>
                     </div>
-                    <p className="mt-1.5 font-semibold text-navy">{b.headline}</p>
-                    {b.message ? <p className="mt-0.5 text-sm text-muted">{b.message}</p> : null}
-                    <p className="mt-1.5 text-xs text-muted">
-                      {formatDateTime(b.created_at)}
-                      {b.sent_by ? `, oleh ${b.sent_by}` : ''}, tujuan{' '}
-                      {b.target_type === 'ALL' ? 'nasional' : b.target_regions?.length ? b.target_regions.join(', ') : 'tidak tercatat'}
-                      {b.fcm && !b.fcm.delivered ? ', push gagal' : ''}
-                    </p>
+                    <button
+                      type="button"
+                      title="Hapus siaran ini"
+                      onClick={() => setSelectedItemToDelete(b)}
+                      className="mt-1 rounded-lg p-2 text-muted hover:bg-awas/10 hover:text-awas transition-colors shrink-0"
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -320,6 +375,36 @@ export default function BroadcastPage() {
           </div>
         </dl>
         <p className="mt-3">Siaran tidak dapat ditarik kembali setelah terkirim.</p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={Boolean(selectedItemToDelete)}
+        title="Hapus siaran ini?"
+        confirmLabel="Hapus siaran"
+        tone="danger"
+        busy={deletingBusy}
+        onClose={() => setSelectedItemToDelete(null)}
+        onConfirm={() => selectedItemToDelete && void deleteBroadcast(selectedItemToDelete.id)}
+      >
+        <p className="text-sm">
+          Apakah Anda yakin ingin menghapus log siaran{' '}
+          <strong className="text-navy font-bold">{selectedItemToDelete?.headline}</strong>? Tindakan ini akan menghapus log secara permanen.
+        </p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={deletingAll}
+        title="Hapus semua riwayat siaran?"
+        confirmLabel="Hapus semua"
+        tone="danger"
+        busy={deletingBusy}
+        onClose={() => setDeletingAll(false)}
+        onConfirm={() => void clearAllBroadcasts()}
+      >
+        <p className="text-sm">
+          Apakah Anda yakin ingin menghapus semua riwayat siaran{' '}
+          {me.isSuper ? 'di seluruh sistem' : `di wilayah ${me.regionName ?? ''}`}? Semua entri log siaran manual akan dibersihkan.
+        </p>
       </ConfirmDialog>
     </>
   );
