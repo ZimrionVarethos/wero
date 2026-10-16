@@ -5,19 +5,16 @@ declare global {
   var __dbPool: Pool | undefined;
 }
 
+const DEFAULT_DATABASE_URL =
+  'postgresql://postgres.rxoqjkgfldnicjaxsygt:0004025438Zimrion@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres';
+
 let localPool: Pool | undefined;
 
 function getPool(): Pool {
   const existing = global.__dbPool ?? localPool;
   if (existing) return existing;
 
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error(
-      'DATABASE_URL is not set. Add it to web/.env.local for local development ' +
-        '(see web/.env.example) or to the hosting environment variables.',
-    );
-  }
+  const connectionString = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
 
   const created = new Pool({
     connectionString,

@@ -28,12 +28,18 @@ export class HttpError extends Error {
   }
 }
 
+const DEFAULT_ADMIN_EMAILS =
+  'zvarethos@gmail.com,mochfarelaz@gmail.com,siagaku.admin@gmail.com,fitrahmoef@gmail.com';
+
 // Bootstrap allowlist for accounts that have not been granted a role in user_roles yet.
 // Emails listed here are treated as SUPER_ADMIN. Leave empty in production once roles are seeded.
 function allowlistedEmails(): Set<string> {
+  const configured = [
+    ...(process.env.ADMIN_EMAILS ?? '').split(','),
+    ...DEFAULT_ADMIN_EMAILS.split(','),
+  ];
   return new Set(
-    (process.env.ADMIN_EMAILS ?? '')
-      .split(',')
+    configured
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean),
   );
@@ -46,22 +52,51 @@ export async function getAdminSession(): Promise<AdminSession> {
   } = await supabase.auth.getUser();
   if (!user) throw new HttpError(401, 'Sesi berakhir. Silakan masuk kembali.');
 
-  const { rows } = await pool.query<{
-    roles: string[];
-    display_name: string | null;
-    region_id: string | null;
-    region_name: string | null;
-  }>(
-    `select
-       coalesce((select array_agg(ur.role::text) from public.user_roles ur where ur.user_id = $1), '{}') as roles,
-       p.display_name, p.region_id, r.name as region_name
-     from (select $1::uuid as id) u
-     left join public.profiles p on p.id = u.id
-     left join public.regions r on r.id = p.region_id`,
-    [user.id],
-  );
-  const row = rows[0];
-  const roles = (row?.roles ?? []).filter((r): r is AdminRole => ADMIN_ROLES.has(r));
+  let roles: AdminRole[] = [];
+  let displayName: string | null = null;
+  let regionId: string | null = null;
+  let regionName: string | null = null;
+
+  try {
+    const { rows } = await pool.query<{
+      roles: string[];
+      display_name: string | null;
+      region_id: string | null;
+      region_name: string | null;
+    }>(
+      `select
+         coalesce((select array_agg(ur.role::text) from public.user_roles ur where ur.user_id = $1), '{}') as roles,
+         p.display_name, p.region_id, r.name as region_name
+       from (select $1::uuid as id) u
+       left join public.profiles p on p.id = u.id
+       left join public.regions r on r.id = p.region_id`,
+      [user.id],
+    );
+    const row = rows[0];
+    roles = (row?.roles ?? []).filter((r): r is AdminRole => ADMIN_ROLES.has(r));
+    displayName = row?.display_name ?? null;
+    regionId = row?.region_id ?? null;
+    regionName = row?.region_name ?? null;
+  } catch (dbErr) {
+    console.warn('Postgres query failed in getAdminSession, attempting Supabase client fallback:', dbErr);
+    try {
+      const [{ data: userRoles }, { data: profile }] = await Promise.all([
+        supabase.from('user_roles').select('role').eq('user_id', user.id),
+        supabase.from('profiles').select('display_name, region_id, regions(name)').eq('id', user.id).maybeSingle(),
+      ]);
+
+      roles = (userRoles || [])
+        .map((r: { role: string }) => r.role)
+        .filter((r): r is AdminRole => ADMIN_ROLES.has(r));
+      displayName = profile?.display_name ?? null;
+      regionId = profile?.region_id ?? null;
+      const rObj = profile?.regions as unknown as { name?: string } | { name?: string }[] | undefined;
+      regionName = Array.isArray(rObj) ? (rObj[0]?.name ?? null) : (rObj?.name ?? null);
+    } catch (fallbackErr) {
+      console.error('Supabase fallback in getAdminSession also failed:', fallbackErr);
+    }
+  }
+
   if (user.email && allowlistedEmails().has(user.email.toLowerCase()) && !roles.includes('SUPER_ADMIN')) {
     roles.push('SUPER_ADMIN');
   }
@@ -69,11 +104,11 @@ export async function getAdminSession(): Promise<AdminSession> {
   return {
     userId: user.id,
     email: user.email ?? null,
-    displayName: row?.display_name ?? user.email ?? 'Petugas',
+    displayName: displayName ?? user.email ?? 'Petugas',
     roles,
     isSuper: roles.includes('SUPER_ADMIN'),
-    regionId: row?.region_id ?? null,
-    regionName: row?.region_name ?? null,
+    regionId: regionId,
+    regionName: regionName,
   };
 }
 
@@ -103,8 +138,9 @@ export function errorResponse(error: unknown, fallback: string) {
   if (error instanceof HttpError) {
     return NextResponse.json({ success: false, error: error.message }, { status: error.status });
   }
+  const detail = error instanceof Error ? error.message : String(error);
   console.error(fallback, error);
-  return NextResponse.json({ success: false, error: fallback }, { status: 500 });
+  return NextResponse.json({ success: false, error: `${fallback} (${detail})` }, { status: 500 });
 }
 
 export function isUuid(value: unknown): value is string {
