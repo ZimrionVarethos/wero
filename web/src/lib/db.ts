@@ -6,7 +6,7 @@ declare global {
 }
 
 const DEFAULT_DATABASE_URL =
-  'postgresql://postgres.rxoqjkgfldnicjaxsygt:0004025438Zimrion@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres';
+  'postgresql://postgres.rxoqjkgfldnicjaxsygt:0004025438Zimrion@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres';
 
 let localPool: Pool | undefined;
 
@@ -14,21 +14,28 @@ function getPool(): Pool {
   const existing = global.__dbPool ?? localPool;
   if (existing) return existing;
 
-  const connectionString = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
+  let connectionString = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
+
+  // Supabase pooler on port 5432 is Session Mode (limited to 15 clients total).
+  // In serverless environments (Vercel) and web dashboards, Transaction Mode
+  // on port 6543 is required to avoid EMAXCONNSESSION errors.
+  if (connectionString.includes('pooler.supabase.com:5432')) {
+    connectionString = connectionString.replace(
+      'pooler.supabase.com:5432',
+      'pooler.supabase.com:6543',
+    );
+  }
 
   const created = new Pool({
     connectionString,
-    max: 10,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000,
+    max: process.env.NODE_ENV === 'production' ? 5 : 10,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000,
     ssl: { rejectUnauthorized: false },
   });
 
-  if (process.env.NODE_ENV !== 'production') {
-    global.__dbPool = created;
-  } else {
-    localPool = created;
-  }
+  global.__dbPool = created;
+  localPool = created;
   return created;
 }
 
