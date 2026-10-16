@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import PhoneMockup from "@/components/landing/PhoneMockup";
 import SimulationCard from "@/components/landing/SimulationCard";
+import IosDownloadModal from "@/components/landing/IosDownloadModal";
 
 // Tautan unduhan APK.
 const APK_URL = process.env.NEXT_PUBLIC_APK_URL ?? "/wero.apk";
@@ -79,7 +80,7 @@ const FAQ = [
   },
   {
     q: "Siapa yang bisa melihat lokasi saya saat mengirim SOS?",
-    a: "Lokasi tepat hanya bisa dibuka petugas berwenang di wilayah Anda, dan setiap pembukaan tercatat di log audit. Dasbor petugas menampilkan perkiraan area sampai kasus dibuka.",
+    a: "Lokasi publik bisa dibuka oleh petugas berwenang dan orang sekitar di wilayah Anda, tapi private hanya dapat dibuka oleh petugas dan orang terdekat yang masuk dalam list, dan setiap pembukaan lokasi tercatat di log audit.",
   },
   {
     q: "Apakah jawaban asisten bisa dijadikan acuan resmi?",
@@ -121,18 +122,19 @@ export default function Home() {
             </a>
             <Link
               href="/admin/login"
-              className="hidden sm:inline-flex min-h-11 items-center px-3 text-sm font-semibold text-navy hover:text-accent"
+              className="hidden sm:inline-flex min-h-11 items-center px-3 text-sm font-semibold text-navy hover:text-accent transition-colors"
             >
               Portal Petugas
             </Link>
             <a
               href={APK_URL}
               download="wero.apk"
-              className="ml-2 inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#cf4f0a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="hidden sm:inline-flex min-h-11 items-center gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3.5 text-sm font-semibold text-accent hover:bg-accent/20 transition-colors"
             >
               <Download className="size-4" aria-hidden />
               Unduh APK
             </a>
+            <IosDownloadModal className="ml-1 sm:ml-2" />
           </nav>
         </div>
       </header>
@@ -196,9 +198,6 @@ export default function Home() {
               </a>
             </div>
 
-            <p className="mt-4 text-xs font-semibold text-muted">
-              Versi Android APK Rilis Terbaru (~67.9 MB) • Bebas Biaya
-            </p>
           </div>
         </section>
 
