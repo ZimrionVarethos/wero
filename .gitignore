@@ -63,6 +63,9 @@ app.*.map.json
 # Widget Preview related
 .widget_preview/
 
-# Internal testing
+# Internal testing and scratch
 /test/
+/scratch/
+.temp/
+supabase/.temp/
 
