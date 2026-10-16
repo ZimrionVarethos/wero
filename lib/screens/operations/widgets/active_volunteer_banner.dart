@@ -91,7 +91,9 @@ class ActiveVolunteerBanner extends StatelessWidget {
                             ? 'Sudah Tiba di Lokasi Korban'
                             : 'Jarak ~ $distText (± $estMin menit)',
                         style: AppTextStyles.caption.copyWith(
-                          color: isArrived ? AppColors.aman : AppColors.textPrimary,
+                          color: isArrived
+                              ? AppColors.aman
+                              : AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -119,10 +121,18 @@ class ActiveVolunteerBanner extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppRadius.button),
                     ),
                   ),
-                  icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.white),
+                  icon: const Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     'Sudah Tiba di Lokasi Korban',
-                    style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

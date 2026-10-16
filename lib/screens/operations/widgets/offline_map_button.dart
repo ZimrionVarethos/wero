@@ -5,10 +5,7 @@ import '../../../theme/app_text_styles.dart';
 
 /// Floating pill button displayed on top of the evacuation map for quick offline map pre-caching.
 class OfflineMapButton extends StatelessWidget {
-  const OfflineMapButton({
-    super.key,
-    required this.onTap,
-  });
+  const OfflineMapButton({super.key, required this.onTap});
 
   final VoidCallback onTap;
 

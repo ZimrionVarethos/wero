@@ -118,7 +118,9 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Peta wilayah berhasil disimpan untuk penggunaan offline.'),
+            content: Text(
+              'Peta wilayah berhasil disimpan untuk penggunaan offline.',
+            ),
             backgroundColor: AppColors.siaga,
           ),
         );

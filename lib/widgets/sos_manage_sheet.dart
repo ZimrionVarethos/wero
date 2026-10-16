@@ -64,9 +64,7 @@ class _SosManageSheetState extends ConsumerState<SosManageSheet> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Panggilan SOS telah dibatalkan.'),
-          ),
+          const SnackBar(content: Text('Panggilan SOS telah dibatalkan.')),
         );
       }
     } catch (e) {
@@ -161,9 +159,7 @@ class _SosManageSheetState extends ConsumerState<SosManageSheet> {
             decoration: BoxDecoration(
               color: AppColors.awas.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(AppRadius.card),
-              border: Border.all(
-                color: AppColors.awas.withValues(alpha: 0.25),
-              ),
+              border: Border.all(color: AppColors.awas.withValues(alpha: 0.25)),
             ),
             child: Text(
               'Sinyal darurat Anda sedang disiarkan ke relawan dan posko kendali terdekat. Jika situasi sudah aman atau panggilan tidak sengaja, pilih tindakan di bawah.',
@@ -177,7 +173,9 @@ class _SosManageSheetState extends ConsumerState<SosManageSheet> {
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Catatan: "${widget.event.note}"',
-              style: AppTextStyles.caption.copyWith(fontStyle: FontStyle.italic),
+              style: AppTextStyles.caption.copyWith(
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ],
           const SizedBox(height: AppSpacing.lg),

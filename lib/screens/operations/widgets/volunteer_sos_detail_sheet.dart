@@ -29,10 +29,8 @@ class VolunteerSosDetailSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => VolunteerSosDetailSheet(
-        event: event,
-        onStartRoute: onStartRoute,
-      ),
+      builder: (_) =>
+          VolunteerSosDetailSheet(event: event, onStartRoute: onStartRoute),
     );
   }
 
@@ -257,7 +255,10 @@ class _VolunteerSosDetailSheetState
                     ),
                     label: const Text(
                       'Tiba di Lokasi',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -273,7 +274,10 @@ class _VolunteerSosDetailSheetState
                   ),
                   child: const Text(
                     'Batal Menolong',
-                    style: TextStyle(color: AppColors.chartRed, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: AppColors.chartRed,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

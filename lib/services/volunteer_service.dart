@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,10 +8,7 @@ import '../models/public_sos_event.dart';
 
 /// Service managing volunteer assistance and nearby public emergency beacons.
 class VolunteerService {
-  const VolunteerService({
-    this.client,
-    this.httpClient,
-  });
+  const VolunteerService({this.client, this.httpClient});
 
   final SupabaseClient? client;
   final http.Client? httpClient;
@@ -58,7 +56,9 @@ class VolunteerService {
             .limit(20);
 
         return (res as List)
-            .map((item) => PublicSosEvent.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) => PublicSosEvent.fromJson(item as Map<String, dynamic>),
+            )
             .toList();
       } catch (_) {}
     }

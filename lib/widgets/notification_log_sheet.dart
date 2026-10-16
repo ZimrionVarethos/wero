@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/providers/emergency_broadcast_provider.dart';
 import '../core/providers/operations_providers.dart';
 import '../models/disaster_event.dart';
 import '../services/notification_dismiss_service.dart';
@@ -43,6 +44,9 @@ class _NotificationLogSheetState extends ConsumerState<NotificationLogSheet> {
   void initState() {
     super.initState();
     _loadDismissed();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(disasterEventsProvider);
+    });
   }
 
   Future<void> _loadDismissed() async {
@@ -58,6 +62,8 @@ class _NotificationLogSheetState extends ConsumerState<NotificationLogSheet> {
   void _dismissEvent(DisasterEvent event) {
     setState(() => _dismissedIds = {..._dismissedIds, event.id});
     _dismissService.dismiss(event.id);
+    // Also silence siren if this dismissed event was the active siren
+    ref.read(activeBroadcastAlertProvider.notifier).dismissById(event.id);
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -99,6 +105,7 @@ class _NotificationLogSheetState extends ConsumerState<NotificationLogSheet> {
               final allIds = visible.map((e) => e.id);
               setState(() => _dismissedIds = {..._dismissedIds, ...allIds});
               _dismissService.dismissAll(allIds);
+              ref.read(activeBroadcastAlertProvider.notifier).dismiss();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.chartRed,
@@ -109,6 +116,16 @@ class _NotificationLogSheetState extends ConsumerState<NotificationLogSheet> {
         ],
       ),
     );
+  }
+
+  List<DisasterEvent> _filterUniqueVisible(List<DisasterEvent> events) {
+    final uniqueMap = <String, DisasterEvent>{};
+    for (final e in events) {
+      uniqueMap.putIfAbsent(e.id, () => e);
+    }
+    return uniqueMap.values
+        .where((e) => !_dismissedIds.contains(e.id))
+        .toList();
   }
 
   @override
@@ -126,9 +143,7 @@ class _NotificationLogSheetState extends ConsumerState<NotificationLogSheet> {
             _buildDragHandle(),
             eventsAsync.maybeWhen(
               data: (events) {
-                final visible = events
-                    .where((e) => !_dismissedIds.contains(e.id))
-                    .toList();
+                final visible = _filterUniqueVisible(events);
                 return NotificationLogHeader(
                   visibleEvents: visible,
                   onClearAll: () => _confirmClearAll(visible),
@@ -150,9 +165,7 @@ class _NotificationLogSheetState extends ConsumerState<NotificationLogSheet> {
                     )
                   : eventsAsync.when(
                       data: (events) {
-                        final visible = events
-                            .where((e) => !_dismissedIds.contains(e.id))
-                            .toList();
+                        final visible = _filterUniqueVisible(events);
                         return visible.isEmpty
                             ? _buildEmptyState()
                             : _buildEventsList(visible, scrollController);

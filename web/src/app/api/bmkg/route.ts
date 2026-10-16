@@ -102,6 +102,7 @@ export async function syncBmkgToDatabase(
     severity,
     targetType: 'ALL',
     targetRegions: ['Seluruh Wilayah Indonesia'],
+    eventId,
   }).catch((err) => {
     console.error('[FCM] Error dispatching BMKG broadcast:', err);
     return { success: false };

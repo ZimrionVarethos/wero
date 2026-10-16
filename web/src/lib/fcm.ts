@@ -79,11 +79,13 @@ export async function sendFcmBroadcast({
   severity,
   targetType,
   targetRegions,
+  eventId,
 }: {
   headline: string;
   severity: string;
   targetType: 'ALL' | 'SPECIFIC';
   targetRegions?: string[];
+  eventId?: string;
 }) {
   const topics: string[] = [];
   if (targetType === 'ALL' || !targetRegions || targetRegions.length === 0) {
@@ -142,6 +144,7 @@ export async function sendFcmBroadcast({
             topic: String(topic),
             target_type: String(targetType),
             headline: String(headline),
+            event_id: String(eventId ?? ''),
           },
         });
         console.log(`[FCM v1] Successfully dispatched to topic "${topic}":`, messageId);
@@ -171,6 +174,7 @@ export async function sendFcmBroadcast({
             topic,
             target_type: targetType,
             headline,
+            event_id: eventId ?? '',
           },
         };
 

@@ -126,7 +126,9 @@ class _AppHeaderState extends ConsumerState<AppHeader>
                       Flexible(
                         child: Text(
                           widget.title!,
-                          style: AppTextStyles.screenTitle.copyWith(fontSize: 16),
+                          style: AppTextStyles.screenTitle.copyWith(
+                            fontSize: 16,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -195,10 +197,15 @@ class _AppHeaderState extends ConsumerState<AppHeader>
                   // 3. Notif
                   Consumer(
                     builder: (context, ref, _) {
-                      final activeAlert =
-                          ref.watch(activeBroadcastAlertProvider);
+                      final activeAlert = ref.watch(
+                        activeBroadcastAlertProvider,
+                      );
                       final eventsCount =
-                          ref.watch(disasterEventsProvider).asData?.value.length ??
+                          ref
+                              .watch(disasterEventsProvider)
+                              .asData
+                              ?.value
+                              .length ??
                           0;
                       final hasAlert = activeAlert != null || eventsCount > 0;
 

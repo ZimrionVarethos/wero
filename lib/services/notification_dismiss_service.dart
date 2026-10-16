@@ -47,4 +47,31 @@ class NotificationDismissService {
       }
     } catch (_) {}
   }
+
+  static const String _keyHandledAlerts = 'wero_handled_alarm_event_ids_v1';
+
+  /// Get event IDs that have already sounded their emergency alarm.
+  Future<Set<String>> getHandledAlertIds() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = prefs.getStringList(_keyHandledAlerts);
+      return list != null ? list.toSet() : <String>{};
+    } catch (_) {
+      return <String>{};
+    }
+  }
+
+  /// Mark an event ID as having already triggered its alarm.
+  Future<void> markAlertHandled(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final current = (prefs.getStringList(_keyHandledAlerts) ?? []).toSet();
+      current.add(id);
+      // Keep only last 50 IDs to prevent unbounded storage
+      final list = current.length > 50
+          ? current.toList().sublist(current.length - 50)
+          : current.toList();
+      await prefs.setStringList(_keyHandledAlerts, list);
+    } catch (_) {}
+  }
 }

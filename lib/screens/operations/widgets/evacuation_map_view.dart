@@ -129,8 +129,8 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
     final targetPoint = widget.activeRoutePoint;
     final targetLatLng =
         (targetPoint?.latitude != null && targetPoint?.longitude != null)
-            ? LatLng(targetPoint!.latitude!, targetPoint.longitude!)
-            : null;
+        ? LatLng(targetPoint!.latitude!, targetPoint.longitude!)
+        : null;
 
     final mission = widget.activeVolunteerMission;
     final missionLatLng = mission != null
@@ -140,8 +140,8 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
     final routePoints = missionLatLng != null
         ? _buildRoutePath(_currentLocation, missionLatLng)
         : (targetLatLng != null
-            ? _buildRoutePath(_currentLocation, targetLatLng)
-            : <LatLng>[]);
+              ? _buildRoutePath(_currentLocation, targetLatLng)
+              : <LatLng>[]);
 
     final mapboxUrl = AppConfig.isMapboxConfigured
         ? 'https://api.mapbox.com/styles/v1/${_currentStyle.styleId}/tiles/256/{z}/{x}/{y}@2x?access_token=${AppConfig.mapboxToken}'
@@ -228,9 +228,7 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
           Positioned(
             top: AppSpacing.sm,
             left: AppSpacing.pagePadding,
-            child: OfflineMapButton(
-              onTap: widget.onDownloadOfflineMap!,
-            ),
+            child: OfflineMapButton(onTap: widget.onDownloadOfflineMap!),
           ),
         Positioned(
           top: AppSpacing.sm,

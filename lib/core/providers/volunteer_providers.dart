@@ -12,11 +12,7 @@ final volunteerServiceProvider = Provider<VolunteerService>((ref) {
 
 /// Query parameter for nearby public SOS search.
 class PublicSosQuery {
-  const PublicSosQuery({
-    this.latitude,
-    this.longitude,
-    this.radiusM = 10000,
-  });
+  const PublicSosQuery({this.latitude, this.longitude, this.radiusM = 10000});
 
   final double? latitude;
   final double? longitude;
@@ -51,19 +47,13 @@ final nearbyPublicSosProvider =
 
 /// Active volunteer mission state.
 class ActiveVolunteerMission {
-  const ActiveVolunteerMission({
-    required this.event,
-    this.status = 'EN_ROUTE',
-  });
+  const ActiveVolunteerMission({required this.event, this.status = 'EN_ROUTE'});
 
   final PublicSosEvent event;
   final String status; // 'EN_ROUTE' | 'ARRIVED'
 
   ActiveVolunteerMission copyWith({String? status}) {
-    return ActiveVolunteerMission(
-      event: event,
-      status: status ?? this.status,
-    );
+    return ActiveVolunteerMission(event: event, status: status ?? this.status);
   }
 }
 

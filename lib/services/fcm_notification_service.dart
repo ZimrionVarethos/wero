@@ -5,8 +5,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'alarm_sound_service.dart';
-
 /// Top-level background message handler executed by the OS when app is closed.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -27,7 +25,15 @@ class FcmNotificationService {
   String? _cachedToken;
   String? get fcmToken => _cachedToken;
 
-  /// Initialize Firebase app and request push notification permissions.
+  final StreamController<RemoteMessage> _onMessageController =
+      StreamController<RemoteMessage>.broadcast();
+
+  /// Broadcast stream emitting incoming foreground FCM push messages.
+  Stream<RemoteMessage> get onMessageStream => _onMessageController.stream;
+
+  /// Latest foreground message received by the device.
+  RemoteMessage? _latestMessage;
+  RemoteMessage? get latestMessage => _latestMessage;
   Future<void> initialize() async {
     try {
       if (kIsWeb) {
@@ -81,11 +87,10 @@ class FcmNotificationService {
         await messaging.subscribeToTopic('nasional');
       } catch (_) {}
 
-      // Listen to foreground FCM messages and trigger alarm siren + vibration
+      // Listen to foreground FCM messages and broadcast to active listeners
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        try {
-          AlarmSoundService().startEmergencyAlarm();
-        } catch (_) {}
+        _latestMessage = message;
+        _onMessageController.add(message);
       });
     } catch (e) {
       if (kDebugMode) {

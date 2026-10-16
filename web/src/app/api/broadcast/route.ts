@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
       severity,
       targetType,
       targetRegions: regions.map((r) => r.name),
+      eventId,
     }).catch((err: unknown) => {
       console.error('[FCM] Error dispatching push:', err);
       return { success: false };

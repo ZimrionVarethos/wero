@@ -20,8 +20,9 @@ class EmergencyAlertOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (alertColor, statusTitle, statusHint, isSirenActive) =
-        switch (event.severity.toUpperCase()) {
+    final (alertColor, statusTitle, statusHint, isSirenActive) = switch (event
+        .severity
+        .toUpperCase()) {
       'AWAS' || 'CRITICAL' => (
         AppColors.awas,
         'AWAS',

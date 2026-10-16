@@ -33,10 +33,12 @@ final class PublicSosEvent {
       id: json['id'] as String,
       victimId: (json['victim_id'] as String?) ?? '',
       victimName: (json['victim_name'] as String?) ?? 'Warga Sekitar',
-      latitude: (json['lat'] as num?)?.toDouble() ??
+      latitude:
+          (json['lat'] as num?)?.toDouble() ??
           (json['latitude'] as num?)?.toDouble() ??
           0.0,
-      longitude: (json['lng'] as num?)?.toDouble() ??
+      longitude:
+          (json['lng'] as num?)?.toDouble() ??
           (json['longitude'] as num?)?.toDouble() ??
           0.0,
       distanceM: (json['distance_m'] as num?)?.toDouble(),
