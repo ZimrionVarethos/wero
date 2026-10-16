@@ -1,0 +1,6 @@
+# GitHub Linguist configuration
+# Mark compiled Flutter Web bundle as generated/vendored so it does not distort repository language stats
+web/public/app/** linguist-vendored
+web/public/app/** linguist-generated=true
+*.dart.js linguist-vendored
+*.dart.js linguist-generated=true
