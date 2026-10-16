@@ -95,8 +95,9 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                   activeSosAsync.when(
                     data: (sos) => sos != null
                         ? Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: AppSpacing.md),
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
                             child: SosActiveCard(event: sos),
                           )
                         : const SizedBox.shrink(),
