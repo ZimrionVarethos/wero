@@ -105,20 +105,20 @@ export default function PhoneMockup({
         </form>
       )}
 
-      {/* Realistic Smartphone Chassis Frame */}
-      <div className="relative mx-auto w-[310px] sm:w-[340px] md:w-[360px] aspect-[9/19] rounded-[52px] bg-[#12141a] p-[10px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/10">
+      {/* Realistic Smartphone Chassis Frame (Compact & Sleek) */}
+      <div className="relative mx-auto w-[240px] sm:w-[260px] md:w-[280px] aspect-[9/18.5] rounded-[44px] bg-[#12141a] p-[8px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/10">
         {/* Exterior button accents (Volume & Power notches) */}
-        <div className="absolute -left-[13px] top-28 h-10 w-[3px] rounded-l-md bg-[#2d3139]" />
-        <div className="absolute -left-[13px] top-42 h-10 w-[3px] rounded-l-md bg-[#2d3139]" />
-        <div className="absolute -right-[13px] top-32 h-14 w-[3px] rounded-r-md bg-[#2d3139]" />
+        <div className="absolute -left-[10px] top-20 h-7 w-[2.5px] rounded-l-md bg-[#2d3139]" />
+        <div className="absolute -left-[10px] top-30 h-7 w-[2.5px] rounded-l-md bg-[#2d3139]" />
+        <div className="absolute -right-[10px] top-24 h-10 w-[2.5px] rounded-r-md bg-[#2d3139]" />
 
         {/* Inner Phone Screen */}
-        <div className="relative h-full w-full overflow-hidden rounded-[42px] bg-white shadow-inner">
+        <div className="relative h-full w-full overflow-hidden rounded-[36px] bg-white shadow-inner">
           {/* Dynamic Island / Top Speaker & Camera Notch */}
-          <div className="pointer-events-none absolute left-1/2 top-2.5 z-30 flex h-6 -translate-x-1/2 items-center justify-between gap-2.5 rounded-full bg-black px-3.5 shadow-md">
-            <div className="size-2 rounded-full bg-[#182335] ring-1 ring-white/10" />
-            <div className="h-1 w-6 rounded-full bg-[#1e2029]" />
-            <div className="size-1.5 rounded-full bg-[#0d47a1]/80" />
+          <div className="pointer-events-none absolute left-1/2 top-2 z-30 flex h-4.5 -translate-x-1/2 items-center justify-between gap-2 rounded-full bg-black px-2.5 shadow-md">
+            <div className="size-1.5 rounded-full bg-[#182335] ring-1 ring-white/10" />
+            <div className="h-0.5 w-4 rounded-full bg-[#1e2029]" />
+            <div className="size-1 rounded-full bg-[#0d47a1]/80" />
           </div>
 
           {/* Loading indicator */}
@@ -140,7 +140,7 @@ export default function PhoneMockup({
           />
 
           {/* Bottom Home Indicator Bar */}
-          <div className="pointer-events-none absolute bottom-2 left-1/2 z-30 h-1 w-32 -translate-x-1/2 rounded-full bg-black/40 backdrop-blur-sm" />
+          <div className="pointer-events-none absolute bottom-1.5 left-1/2 z-30 h-1 w-24 -translate-x-1/2 rounded-full bg-black/40 backdrop-blur-sm" />
         </div>
       </div>
 

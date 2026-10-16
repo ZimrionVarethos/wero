@@ -220,9 +220,9 @@ export default function Home() {
             </div>
 
             {/* Grid 2 Kolom: Kiri Demo HP, Kanan Simulasi 3D */}
-            <div className="grid gap-10 lg:grid-cols-2 items-start">
+            <div className="grid gap-8 lg:grid-cols-2 items-start">
               {/* Kolom Kiri: Demo Mockup HP */}
-              <div className="flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur shadow-xl">
+              <div className="flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 backdrop-blur shadow-xl">
                 <div className="mb-4 text-center">
                   <span className="inline-flex items-center gap-1.5 text-sm font-bold text-accent">
                     <Smartphone className="size-4" /> Mockup Ponsel Interaktif
@@ -235,7 +235,7 @@ export default function Home() {
               </div>
 
               {/* Kolom Kanan: Simulasi 3D Bencana */}
-              <div className="flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur shadow-xl">
+              <div className="flex flex-col items-center rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 backdrop-blur shadow-xl">
                 <div className="mb-4 text-center">
                   <span className="inline-flex items-center gap-1.5 text-sm font-bold text-white">
                     <LifeBuoy className="size-4 text-[#C62828]" /> Simulasi 3D Dampak Bencana

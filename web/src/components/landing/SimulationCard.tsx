@@ -46,7 +46,7 @@ export default function SimulationCard({ className = "" }: { className?: string 
 
   return (
     <figure
-      className={`relative h-[580px] sm:h-[640px] lg:h-[720px] w-full overflow-hidden rounded-[32px] border border-white/10 bg-[radial-gradient(120%_90%_at_70%_20%,#1d3a5f_0%,#12263F_55%,#0b1a2c_100%)] shadow-2xl ${className}`}
+      className={`relative h-[520px] sm:h-[570px] lg:h-[610px] w-full overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(120%_90%_at_70%_20%,#1d3a5f_0%,#12263F_55%,#0b1a2c_100%)] shadow-2xl ${className}`}
     >
       <DisasterScene scenario={scenario} className="absolute inset-0 cursor-grab active:cursor-grabbing" />
 
