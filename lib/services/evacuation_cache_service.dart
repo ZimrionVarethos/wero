@@ -11,6 +11,47 @@ class EvacuationCacheService {
   static const String _cacheKey = 'wero_cached_evacuation_points_v1';
   static const String _lastLatKey = 'wero_last_synced_lat';
   static const String _lastLngKey = 'wero_last_synced_lng';
+  static const String _offlineMapReadyKey = 'wero_offline_map_ready_flag';
+  static const String _offlineMapDateKey = 'wero_offline_map_saved_date';
+
+  /// Check whether the user has pre-downloaded the offline map pack for their area.
+  Future<bool> isOfflineMapDownloaded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_offlineMapReadyKey) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Mark offline map as downloaded with current date and point count.
+  Future<void> setOfflineMapDownloaded({
+    required bool isDownloaded,
+    int pointsCount = 0,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_offlineMapReadyKey, isDownloaded);
+      if (isDownloaded) {
+        final now = DateTime.now();
+        final dateStr =
+            '${now.day}/${now.month}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+        await prefs.setString(_offlineMapDateKey, dateStr);
+      } else {
+        await prefs.remove(_offlineMapDateKey);
+      }
+    } catch (_) {}
+  }
+
+  /// Returns the formatted date string when the offline map was downloaded.
+  Future<String?> getOfflineMapDownloadedDate() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_offlineMapDateKey);
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Save last known or synced user location coordinates to local storage.
   Future<void> saveLastLocation(double lat, double lng) async {

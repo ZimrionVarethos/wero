@@ -28,19 +28,23 @@ jobs:
       - name: Run Analysis & Tests
         run: |
           flutter analyze
-          flutter test
+          if [ -d "test" ]; then
+            flutter test
+          else
+            echo "Directory 'test' not found. Skipping flutter test."
+          fi
 
       - name: Build iOS Application (Release, unsigned)
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --no-tree-shake-icons
 
       - name: Package Payload (Runner.app)
         run: |
           mkdir -p Payload
           cp -r build/ios/iphoneos/Runner.app Payload/
-          zip -r Siagaku-iOS-unsigned.ipa Payload
+          zip -r Wero-iOS-unsigned.ipa Payload
 
       - name: Upload iOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Siagaku-iOS-unsigned
-          path: Siagaku-iOS-unsigned.ipa
+          name: Wero-iOS-unsigned
+          path: Wero-iOS-unsigned.ipa

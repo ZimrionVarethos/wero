@@ -32,7 +32,7 @@ export function resolveBmkgSeverity(
 /**
  * Ingests a BMKG earthquake into public.disaster_events and optionally sends push notification.
  */
-async function syncBmkgToDatabase(
+export async function syncBmkgToDatabase(
   quake: {
     Tanggal?: string;
     Jam?: string;

@@ -18,6 +18,7 @@ import 'widgets/evacuation_map_view.dart';
 import 'widgets/evacuation_search_bar.dart';
 import 'widgets/facility_card.dart';
 import 'widgets/facility_detail_sheet.dart';
+import 'widgets/offline_map_download_dialog.dart';
 import 'widgets/volunteer_sos_detail_sheet.dart';
 import '../../widgets/app_header.dart';
 
@@ -108,6 +109,23 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
     );
   }
 
+  void _showOfflineDownloadDialog(List<EvacuationPoint> points) {
+    OfflineMapDownloadDialog.show(
+      context,
+      userLocation: _userLocation,
+      availablePoints: points,
+      onDownloadComplete: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Peta wilayah berhasil disimpan untuk penggunaan offline.'),
+            backgroundColor: AppColors.siaga,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final query = EvacuationQuery(
@@ -128,6 +146,17 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
       appBar: AppHeader(
         title: 'Maps',
         actions: [
+          IconButton(
+            tooltip: 'Unduh Peta Offline',
+            icon: const Icon(
+              Icons.download_for_offline_rounded,
+              color: AppColors.accentOrange,
+            ),
+            onPressed: () {
+              final pts = pointsAsync.asData?.value ?? [];
+              _showOfflineDownloadDialog(pts);
+            },
+          ),
           IconButton(
             tooltip: 'Tambah Posko Baru (Admin)',
             icon: const Icon(
@@ -208,6 +237,8 @@ class _EvacuationScreenState extends ConsumerState<EvacuationScreen> {
                       onClearRoute: () =>
                           setState(() => _selectedRoutePoint = null),
                       onPointSelected: _showDetailSheet,
+                      onDownloadOfflineMap: () =>
+                          _showOfflineDownloadDialog(points),
                     )
                   : _buildList(points),
               loading: () => const Center(

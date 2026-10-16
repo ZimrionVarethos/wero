@@ -15,6 +15,7 @@ import 'evacuation_map_markers.dart';
 import 'map_layer_button.dart';
 import 'map_location_button.dart';
 import 'map_zoom_controls.dart';
+import 'offline_map_button.dart';
 
 /// Interactive high-resolution map view supporting Mapbox tiles, GPS sync, and route polylines.
 class EvacuationMapView extends StatefulWidget {
@@ -32,6 +33,7 @@ class EvacuationMapView extends StatefulWidget {
     this.activeVolunteerMission,
     this.onClearVolunteerRoute,
     this.onVolunteerArrived,
+    this.onDownloadOfflineMap,
   });
 
   final List<EvacuationPoint> points;
@@ -46,6 +48,7 @@ class EvacuationMapView extends StatefulWidget {
   final ActiveVolunteerMission? activeVolunteerMission;
   final VoidCallback? onClearVolunteerRoute;
   final VoidCallback? onVolunteerArrived;
+  final VoidCallback? onDownloadOfflineMap;
 
   @override
   State<EvacuationMapView> createState() => _EvacuationMapViewState();
@@ -220,6 +223,14 @@ class _EvacuationMapViewState extends State<EvacuationMapView> {
             targetLatLng: targetLatLng,
             userLocation: _currentLocation,
             onClearRoute: widget.onClearRoute,
+          ),
+        if (widget.onDownloadOfflineMap != null)
+          Positioned(
+            top: AppSpacing.sm,
+            left: AppSpacing.pagePadding,
+            child: OfflineMapButton(
+              onTap: widget.onDownloadOfflineMap!,
+            ),
           ),
         Positioned(
           top: AppSpacing.sm,
