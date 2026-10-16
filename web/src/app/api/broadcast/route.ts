@@ -18,15 +18,16 @@ export async function GET() {
               d.source_payload->>'target_type' as target_type,
               d.source_payload->'target_regions' as target_regions,
               d.source_payload->'fcm' as fcm,
-              coalesce(pr.display_name, d.source_payload->>'broadcasted_by') as sent_by,
+              coalesce(pr.display_name, d.source_payload->>'broadcasted_by', d.source) as sent_by,
               d.occurred_at, d.created_at
        from public.disaster_events d
        left join public.profiles pr on pr.id::text = d.source_payload->>'actor_id'
-       where d.source_event_id like 'MANUAL-%'
+       where (d.source_event_id like 'MANUAL-%' or d.source_event_id like 'BMKG-%')
          and ($1::uuid is null or d.region_id = $1::uuid
-              or d.source_payload->'target_region_ids' ? $1::text)
-       order by d.created_at desc
-       limit 50`,
+              or d.source_payload->'target_region_ids' ? $1::text
+              or d.source_payload->>'target_type' = 'ALL')
+       order by coalesce(d.occurred_at, d.created_at) desc
+       limit 60`,
       [scope],
     );
     return NextResponse.json({ success: true, data: rows });
@@ -143,8 +144,8 @@ export async function DELETE(req: NextRequest) {
       const res = await pool.query<{ id: string; headline: string }>(
         `delete from public.disaster_events
          where id = $1::uuid
-           and source_event_id like 'MANUAL-%'
-           and ($2::uuid is null or region_id = $2::uuid or source_payload->'target_region_ids' ? $2::text)
+           and (source_event_id like 'MANUAL-%' or source_event_id like 'BMKG-%')
+           and ($2::uuid is null or region_id = $2::uuid or source_payload->'target_region_ids' ? $2::text or source_payload->>'target_type' = 'ALL')
          returning id, headline`,
         [id, scope],
       );
@@ -164,8 +165,8 @@ export async function DELETE(req: NextRequest) {
     if (all) {
       const res = await pool.query<{ id: string }>(
         `delete from public.disaster_events
-         where source_event_id like 'MANUAL-%'
-           and ($1::uuid is null or region_id = $1::uuid or source_payload->'target_region_ids' ? $1::text)
+         where (source_event_id like 'MANUAL-%' or source_event_id like 'BMKG-%')
+           and ($1::uuid is null or region_id = $1::uuid or source_payload->'target_region_ids' ? $1::text or source_payload->>'target_type' = 'ALL')
          returning id`,
         [scope],
       );

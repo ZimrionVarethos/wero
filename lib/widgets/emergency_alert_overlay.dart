@@ -20,8 +20,33 @@ class EmergencyAlertOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCritical = event.isAwas || event.severity == 'CRITICAL';
-    final alertColor = isCritical ? AppColors.chartRed : AppColors.accentOrange;
+    final (alertColor, statusTitle, statusHint, isSirenActive) =
+        switch (event.severity.toUpperCase()) {
+      'AWAS' || 'CRITICAL' => (
+        AppColors.awas,
+        'AWAS',
+        'Ancaman sedang terjadi, segera bertindak',
+        true,
+      ),
+      'SIAGA' || 'WARNING' => (
+        AppColors.siaga,
+        'SIAGA',
+        'Ancaman dekat, bersiap evakuasi',
+        true,
+      ),
+      'WASPADA' || 'ADVISORY' => (
+        AppColors.waspada,
+        'WASPADA',
+        'Potensi ancaman, pantau perkembangan',
+        false,
+      ),
+      _ => (
+        AppColors.info,
+        'INFO',
+        'Informasi umum tanpa tindakan segera',
+        false,
+      ),
+    };
 
     return Material(
       color: Colors.black87,
@@ -67,7 +92,9 @@ class EmergencyAlertOverlay extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'SIARAN DARURAT RESMI',
+                              isSirenActive
+                                  ? 'SIARAN DARURAT RESMI'
+                                  : 'PERINGATAN INFORMASI RESMI',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
@@ -94,6 +121,15 @@ class EmergencyAlertOverlay extends StatelessWidget {
                       height: 1.3,
                     ),
                   ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    statusHint,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: alertColor,
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.sm),
@@ -111,7 +147,7 @@ class EmergencyAlertOverlay extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Status: ${event.severity}',
+                          'Status: $statusTitle',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
@@ -167,13 +203,17 @@ class EmergencyAlertOverlay extends StatelessWidget {
                           borderRadius: BorderRadius.circular(AppRadius.button),
                         ),
                       ),
-                      icon: const Icon(
-                        Icons.volume_off_rounded,
+                      icon: Icon(
+                        isSirenActive
+                            ? Icons.volume_off_rounded
+                            : Icons.check_circle_outline_rounded,
                         color: Colors.white,
                       ),
-                      label: const Text(
-                        'HENTIKAN SIRINE & TETAP SIAGA',
-                        style: TextStyle(
+                      label: Text(
+                        isSirenActive
+                            ? 'HENTIKAN SIRINE & TETAP SIAGA'
+                            : 'MENGERTI & TETAP PANTAU',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,

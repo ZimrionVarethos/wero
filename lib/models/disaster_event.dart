@@ -39,6 +39,7 @@ final class DisasterEvent {
   bool get isAwas => severity == 'AWAS';
   bool get isSiaga => severity == 'SIAGA';
   bool get isWaspada => severity == 'WASPADA';
+  bool get isInfo => severity == 'INFO';
 
   bool isTargetedFor(UserProfile? profile) {
     // 1. National broadcasts target every citizen.

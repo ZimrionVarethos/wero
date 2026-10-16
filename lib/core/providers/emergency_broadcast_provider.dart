@@ -101,7 +101,10 @@ class ActiveBroadcastNotifier extends Notifier<DisasterEvent?> {
     }
 
     state = event;
-    ref.read(alarmSoundServiceProvider).startEmergencyAlarm();
+    final sev = event.severity.toUpperCase();
+    if (sev == 'AWAS' || sev == 'SIAGA' || sev == 'CRITICAL') {
+      ref.read(alarmSoundServiceProvider).startEmergencyAlarm();
+    }
   }
 
   /// Dismiss the active alert and stop the audio siren.

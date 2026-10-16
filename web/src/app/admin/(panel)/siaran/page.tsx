@@ -2,11 +2,25 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useAdminData } from '@/lib/admin/use-admin-data';
-import { BellRing, CheckCircle2, CircleAlert, Megaphone, Search, Send, Trash2 } from 'lucide-react';
+import { BellRing, CircleAlert, Search, Send } from 'lucide-react';
 import { useAdmin } from '@/components/admin/AdminShell';
-import { Alert, Button, Card, CardHeader, ConfirmDialog, EmptyState, PageHeader, SelectField, SeverityBadge, SkeletonRows, TextArea, TextField, SEVERITY_STYLE } from '@/components/admin/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  CardHeader,
+  ConfirmDialog,
+  PageHeader,
+  SelectField,
+  SeverityBadge,
+  TextArea,
+  TextField,
+  SEVERITY_STYLE,
+} from '@/components/admin/ui';
+import { BmkgLiveCard, type BmkgQuake } from '@/components/admin/BmkgLiveCard';
+import { BroadcastHistoryCard } from '@/components/admin/BroadcastHistoryCard';
 import { adminFetch, errorMessage } from '@/lib/admin/client';
-import { formatDateTime, HAZARD_LABEL } from '@/lib/admin/format';
+import { HAZARD_LABEL } from '@/lib/admin/format';
 import type { BroadcastRow, Region, Severity } from '@/lib/admin/types';
 
 const SEVERITIES: { value: Severity; hint: string }[] = [
@@ -33,35 +47,6 @@ export default function BroadcastPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ delivered: boolean; target: string } | null>(null);
   const [fieldError, setFieldError] = useState<string | null>(null);
-  const [selectedItemToDelete, setSelectedItemToDelete] = useState<BroadcastRow | null>(null);
-  const [deletingAll, setDeletingAll] = useState(false);
-  const [deletingBusy, setDeletingBusy] = useState(false);
-
-  const deleteBroadcast = async (id: string) => {
-    setDeletingBusy(true);
-    try {
-      await adminFetch(`/api/broadcast?id=${id}`, { method: 'DELETE' });
-      setSelectedItemToDelete(null);
-      historyQ.reload();
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setDeletingBusy(false);
-    }
-  };
-
-  const clearAllBroadcasts = async () => {
-    setDeletingBusy(true);
-    try {
-      await adminFetch('/api/broadcast?all=true', { method: 'DELETE' });
-      setDeletingAll(false);
-      historyQ.reload();
-    } catch (e) {
-      setError(errorMessage(e));
-    } finally {
-      setDeletingBusy(false);
-    }
-  };
 
   useEffect(() => {
     if (!me.isSuper) return;
@@ -87,7 +72,9 @@ export default function BroadcastPage() {
     e.preventDefault();
     setResult(null);
     if (headline.trim().length < 5) return setFieldError('Judul minimal 5 karakter.');
-    if (me.isSuper && !targetAll && targets.length === 0) return setFieldError('Pilih minimal satu wilayah tujuan.');
+    if (me.isSuper && !targetAll && targets.length === 0) {
+      return setFieldError('Pilih minimal satu wilayah tujuan.');
+    }
     setFieldError(null);
     setConfirming(true);
   };
@@ -119,16 +106,31 @@ export default function BroadcastPage() {
     }
   };
 
+  const handleUseBmkgInDraft = (quake: BmkgQuake, bmkgSeverity: Severity) => {
+    setSeverity(bmkgSeverity);
+    const isTsunami = /tsunami/i.test(quake.Potensi || '');
+    setHazard(isTsunami ? 'TSUNAMI' : 'EARTHQUAKE');
+    setHeadline(`Gempa M ${quake.Magnitude || '0'} - ${quake.Wilayah || 'Indonesia'}`);
+    setMessage(
+      `Kedalaman ${quake.Kedalaman || '-'}. ${quake.Potensi || ''}${
+        quake.Dirasakan ? ` (Dirasakan: ${quake.Dirasakan})` : ''
+      }`.trim(),
+    );
+    if (me.isSuper) {
+      setTargetAll(true);
+    }
+  };
+
   const sev = SEVERITY_STYLE[severity];
 
   return (
     <>
       <PageHeader
         title="Siaran peringatan"
-        description="Kirim peringatan resmi ke ponsel warga di wilayah tujuan. Siaran tersimpan permanen dan tercatat di log audit."
+        description="Pantau sinyal resmi BMKG TEWS dan kirim siaran darurat ke ponsel warga di wilayah terdampak."
       />
 
-      <div className="mb-4 space-y-3">
+      <div className="mb-6 space-y-3">
         {error || historyQ.error ? (
           <Alert tone="error" onDismiss={() => setError(null)}>
             {error ?? historyQ.error}
@@ -141,11 +143,17 @@ export default function BroadcastPage() {
               : `Siaran tersimpan, tetapi notifikasi push gagal dikirim ke ${result.target}. Periksa konfigurasi FCM di server.`}
           </Alert>
         ) : null}
+
+        {/* Live BMKG Official Earthquake Banner Card */}
+        <BmkgLiveCard
+          onUseInDraft={handleUseBmkgInDraft}
+          onBroadcasted={() => historyQ.reload()}
+        />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         <Card>
-          <CardHeader title="Draf siaran" description="Belum terkirim sampai Anda mengonfirmasi" />
+          <CardHeader title="Draf siaran manual" description="Kustomisasi judul, instruksi, dan sasaran wilayah" />
           <form onSubmit={review} className="space-y-5 p-5" noValidate>
             <fieldset>
               <legend className="mb-2 text-sm font-semibold text-navy">Tingkat status</legend>
@@ -154,10 +162,19 @@ export default function BroadcastPage() {
                   <label
                     key={s.value}
                     className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                      severity === s.value ? 'border-navy bg-navy/[0.03] ring-1 ring-navy' : 'border-border-neutral hover:border-navy/40'
+                      severity === s.value
+                        ? 'border-navy bg-navy/[0.03] ring-1 ring-navy'
+                        : 'border-border-neutral hover:border-navy/40'
                     }`}
                   >
-                    <input type="radio" name="severity" value={s.value} checked={severity === s.value} onChange={() => setSeverity(s.value)} className="mt-1 size-4 accent-[#12263F]" />
+                    <input
+                      type="radio"
+                      name="severity"
+                      value={s.value}
+                      checked={severity === s.value}
+                      onChange={() => setSeverity(s.value)}
+                      className="mt-1 size-4 accent-[#12263F]"
+                    />
                     <span>
                       <SeverityBadge level={s.value} />
                       <span className="mt-1 block text-xs text-muted">{s.hint}</span>
@@ -181,7 +198,7 @@ export default function BroadcastPage() {
               maxLength={120}
               onChange={(e) => setHeadline(e.target.value)}
               hint={`${headline.length} dari 120 karakter. Tampil sebagai judul notifikasi.`}
-              placeholder="Contoh, Banjir di bantaran Sungai Code, segera menuju titik kumpul"
+              placeholder="Contoh: Gempa bumi M 6.2 terasa kuat, waspada gempa susulan"
             />
             <TextArea
               label="Instruksi tambahan"
@@ -189,7 +206,7 @@ export default function BroadcastPage() {
               maxLength={500}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              hint="Satu atau dua kalimat perintah yang jelas. Opsional."
+              hint="Satu atau dua kalimat perintah yang jelas untuk warga."
             />
 
             <fieldset>
@@ -197,7 +214,7 @@ export default function BroadcastPage() {
               {!me.isSuper ? (
                 <p className="rounded-lg border border-border-neutral bg-cream/60 px-3 py-3 text-sm">
                   <span className="font-semibold text-navy">{me.regionName ?? 'Wilayah tugas'}</span>
-                  <span className="block text-xs text-muted">Admin wilayah hanya dapat menyiarkan ke wilayah tugasnya.</span>
+                  <span className="block text-xs text-muted">Admin wilayah menyiarkan ke wilayah tugasnya.</span>
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -208,16 +225,13 @@ export default function BroadcastPage() {
                     </label>
                     <label className={`flex min-h-12 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm font-semibold ${targetAll ? 'border-awas ring-1 ring-awas' : 'border-border-neutral'}`}>
                       <input type="radio" name="target" checked={targetAll} onChange={() => setTargetAll(true)} className="accent-[#C62828]" />
-                      Seluruh pengguna
+                      Seluruh pengguna (Nasional)
                     </label>
                   </div>
                   {!targetAll ? (
                     <div className="rounded-lg border border-border-neutral">
                       <div className="relative border-b border-border-neutral">
                         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
-                        <label htmlFor="cari-wilayah" className="sr-only">
-                          Cari wilayah
-                        </label>
                         <input
                           id="cari-wilayah"
                           type="search"
@@ -227,7 +241,7 @@ export default function BroadcastPage() {
                           className="min-h-12 w-full rounded-t-lg bg-white pl-9 pr-3 text-sm outline-none"
                         />
                       </div>
-                      <ul className="max-h-48 overflow-y-auto p-1">
+                      <ul className="max-h-44 overflow-y-auto p-1">
                         {filteredRegions.map((r) => (
                           <li key={r.id}>
                             <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-md px-2 text-sm hover:bg-cream">
@@ -241,13 +255,12 @@ export default function BroadcastPage() {
                             </label>
                           </li>
                         ))}
-                        {filteredRegions.length === 0 ? <li className="px-2 py-3 text-sm text-muted">Wilayah tidak ditemukan.</li> : null}
                       </ul>
                     </div>
                   ) : (
                     <p className="flex items-start gap-2 rounded-lg bg-awas/5 px-3 py-2 text-xs font-medium text-awas">
                       <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-                      Siaran nasional diterima semua pengguna. Gunakan hanya untuk kejadian berdampak luas.
+                      Siaran nasional diterima seluruh pengguna aplikasi Wero.
                     </p>
                   )}
                 </div>
@@ -269,7 +282,7 @@ export default function BroadcastPage() {
               <div className="rounded-2xl bg-navy p-4">
                 <div className="rounded-xl bg-white p-4 shadow-sm">
                   <div className="flex items-center gap-2 text-xs text-muted">
-                    <BellRing className="size-3.5" aria-hidden /> Wero, sekarang
+                    <BellRing className="size-3.5" aria-hidden /> Wero · Sekarang
                   </div>
                   <div className="mt-2 flex items-start gap-3">
                     <span className={`grid size-9 shrink-0 place-items-center rounded-lg ${sev.className}`}>
@@ -285,66 +298,19 @@ export default function BroadcastPage() {
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-xs text-muted">Tujuan {targetLabel}</p>
+              <p className="mt-3 text-xs text-muted">Tujuan: {targetLabel}</p>
             </div>
           </Card>
 
-          <Card>
-            <CardHeader
-              title="Riwayat siaran"
-              description={me.isSuper ? 'Semua wilayah' : `Wilayah ${me.regionName ?? ''}`}
-              actions={
-                history && history.length > 0 ? (
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    icon={Trash2}
-                    onClick={() => setDeletingAll(true)}
-                  >
-                    Hapus Semua Log
-                  </Button>
-                ) : null
-              }
-            />
-            {history === null ? (
-              <SkeletonRows rows={3} />
-            ) : history.length === 0 ? (
-              <EmptyState icon={Megaphone} title="Belum ada siaran" />
-            ) : (
-              <ul className="divide-y divide-border-neutral">
-                {history.map((b) => (
-                  <li key={b.id} className="group flex items-start justify-between gap-3 px-5 py-4 hover:bg-cream/40 transition-colors">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <SeverityBadge level={b.severity} />
-                        <span className="text-xs font-semibold text-muted">{HAZARD_LABEL[b.disaster_type] ?? b.disaster_type}</span>
-                        <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-aman">
-                          <CheckCircle2 className="size-3.5" aria-hidden /> Terkirim
-                        </span>
-                      </div>
-                      <p className="mt-1.5 font-semibold text-navy">{b.headline}</p>
-                      {b.message ? <p className="mt-0.5 text-sm text-muted">{b.message}</p> : null}
-                      <p className="mt-1.5 text-xs text-muted">
-                        {formatDateTime(b.created_at)}
-                        {b.sent_by ? `, oleh ${b.sent_by}` : ''}, tujuan{' '}
-                        {b.target_type === 'ALL' ? 'nasional' : b.target_regions?.length ? b.target_regions.join(', ') : 'tidak tercatat'}
-                        {b.fcm && !b.fcm.delivered ? ', push gagal' : ''}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      title="Hapus siaran ini"
-                      onClick={() => setSelectedItemToDelete(b)}
-                      className="mt-1 rounded-lg p-2 text-muted hover:bg-awas/10 hover:text-awas transition-colors shrink-0"
-                    >
-                      <Trash2 className="size-4" aria-hidden />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          {/* Broadcast history including BMKG events */}
+          <BroadcastHistoryCard
+            history={history}
+            loading={historyQ.loading}
+            isSuper={me.isSuper}
+            regionName={me.regionName}
+            onReload={() => historyQ.reload()}
+            onError={(msg) => setError(msg)}
+          />
         </div>
       </div>
 
@@ -374,37 +340,7 @@ export default function BroadcastPage() {
             <dd className="text-sm font-semibold">{targetLabel}</dd>
           </div>
         </dl>
-        <p className="mt-3">Siaran tidak dapat ditarik kembali setelah terkirim.</p>
-      </ConfirmDialog>
-
-      <ConfirmDialog
-        open={Boolean(selectedItemToDelete)}
-        title="Hapus siaran ini?"
-        confirmLabel="Hapus siaran"
-        tone="danger"
-        busy={deletingBusy}
-        onClose={() => setSelectedItemToDelete(null)}
-        onConfirm={() => selectedItemToDelete && void deleteBroadcast(selectedItemToDelete.id)}
-      >
-        <p className="text-sm">
-          Apakah Anda yakin ingin menghapus log siaran{' '}
-          <strong className="text-navy font-bold">{selectedItemToDelete?.headline}</strong>? Tindakan ini akan menghapus log secara permanen.
-        </p>
-      </ConfirmDialog>
-
-      <ConfirmDialog
-        open={deletingAll}
-        title="Hapus semua riwayat siaran?"
-        confirmLabel="Hapus semua"
-        tone="danger"
-        busy={deletingBusy}
-        onClose={() => setDeletingAll(false)}
-        onConfirm={() => void clearAllBroadcasts()}
-      >
-        <p className="text-sm">
-          Apakah Anda yakin ingin menghapus semua riwayat siaran{' '}
-          {me.isSuper ? 'di seluruh sistem' : `di wilayah ${me.regionName ?? ''}`}? Semua entri log siaran manual akan dibersihkan.
-        </p>
+        <p className="mt-3 text-sm">Siaran tidak dapat ditarik kembali setelah terkirim.</p>
       </ConfirmDialog>
     </>
   );
