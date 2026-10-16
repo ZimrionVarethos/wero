@@ -77,27 +77,13 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Area hero atas dengan background putih dan lekukan melengkung
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceWhite.withValues(alpha: 0.95),
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(AppRadius.heroCurve),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryNavy.withValues(alpha: 0.05),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
+                // Quick Access & Active SOS bar (seamless floating on canvas)
+                Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
-                    AppSpacing.sm,
+                    AppSpacing.md,
                     AppSpacing.pagePadding,
-                    AppSpacing.xxl + 8,
+                    AppSpacing.xs,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -118,11 +104,11 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
                     ],
                   ),
                 ),
-                // Konten komunitas di atas kanvas krem
+                // Konten komunitas lokal
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
-                    AppSpacing.lg,
+                    AppSpacing.md,
                     AppSpacing.pagePadding,
                     80, // room for FAB
                   ),

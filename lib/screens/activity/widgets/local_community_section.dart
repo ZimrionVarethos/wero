@@ -27,10 +27,16 @@ class LocalCommunitySection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(
-              Icons.location_on_outlined,
-              size: 20,
-              color: AppColors.chartBlue,
+            Image.asset(
+              'assets/images/news_icon.png',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.newspaper_rounded,
+                size: 22,
+                color: AppColors.chartBlue,
+              ),
             ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
