@@ -62,3 +62,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Internal testing
+/test/
+
