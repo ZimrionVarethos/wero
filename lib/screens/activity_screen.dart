@@ -11,6 +11,7 @@ import '../theme/app_spacing.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_header.dart';
 import '../widgets/contour_wave_background.dart';
+import 'activity/widgets/condition_summary_banner.dart';
 import 'activity/widgets/local_community_section.dart';
 import 'activity/widgets/quick_access_bar.dart';
 import 'operations/widgets/sos_active_card.dart';
@@ -77,11 +78,20 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // Quick Access & Active SOS bar (seamless floating on canvas)
+                // 1. Banner Ringkasan Kondisi (Panjang mentok lebar hp, margin tipis)
+                const Padding(
+                  padding: EdgeInsets.only(
+                    top: AppSpacing.sm,
+                    bottom: AppSpacing.xs,
+                  ),
+                  child: ConditionSummaryBanner(),
+                ),
+
+                // 2. Active SOS & Quick Access (Kerabat & Panduan)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
-                    AppSpacing.md,
+                    AppSpacing.xs,
                     AppSpacing.pagePadding,
                     AppSpacing.xs,
                   ),
