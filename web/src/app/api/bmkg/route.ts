@@ -47,6 +47,7 @@ export async function syncBmkgToDatabase(
   },
   overrideSeverity?: string,
   actorId?: string,
+  forcePush?: boolean,
 ) {
   const mag = parseFloat(quake.Magnitude || '0') || null;
   const depth = parseFloat((quake.Kedalaman || '').replace(/[^0-9.]/g, '')) || null;
@@ -56,6 +57,29 @@ export async function syncBmkgToDatabase(
   const isTsunami = /tsunami/i.test(potensi);
   const disasterType = isTsunami ? 'TSUNAMI' : 'EARTHQUAKE';
   const sourceEventId = `BMKG-${quake.DateTime || `${quake.Tanggal}-${quake.Jam}`}`;
+
+  // Check if this exact BMKG earthquake is already recorded in the database
+  const existing = await pool.query<{ id: string; severity: string; source_payload: any }>(
+    `select id, severity, source_payload from public.disaster_events
+     where source = 'BMKG TEWS' and source_event_id = $1 limit 1`,
+    [sourceEventId],
+  );
+
+  const isNewEvent = existing.rows.length === 0;
+  const isSeverityEscalated = !isNewEvent && existing.rows[0].severity !== severity;
+
+  // If this earthquake has already been ingested and pushed, and is NOT a manual admin broadcast or severity escalation, SKIP PUSH completely!
+  if (!isNewEvent && !isSeverityEscalated && !forcePush && !actorId) {
+    return {
+      id: existing.rows[0].id,
+      isNew: false,
+      alreadyPushed: true,
+      delivered: false,
+      sourceEventId,
+      severity,
+      headline,
+    };
+  }
 
   const payload = {
     message: potensi,
@@ -96,7 +120,7 @@ export async function syncBmkgToDatabase(
 
   const eventId = rows[0]?.id;
 
-  // Dispatch FCM push to mobile users
+  // Dispatch FCM push to mobile users only for new event, severity escalation, or manual push
   const fcm = await sendFcmBroadcast({
     headline,
     severity,
@@ -133,7 +157,15 @@ export async function syncBmkgToDatabase(
     });
   }
 
-  return { id: eventId, delivered, severity, headline };
+  return {
+    id: eventId,
+    isNew: isNewEvent,
+    alreadyPushed: false,
+    delivered,
+    sourceEventId,
+    severity,
+    headline,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -254,7 +286,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await syncBmkgToDatabase(quake, body.severity, session.userId);
+    const result = await syncBmkgToDatabase(quake, body.severity, session.userId, true);
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     return errorResponse(error, 'Gagal menyiarkan sinyal BMKG');

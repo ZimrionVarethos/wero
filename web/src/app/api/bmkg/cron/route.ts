@@ -55,9 +55,22 @@ export async function GET(req: NextRequest) {
     const severity = resolveBmkgSeverity(quake.Magnitude, quake.Potensi);
     const syncResult = await syncBmkgToDatabase(quake);
 
+    if (syncResult.alreadyPushed) {
+      return NextResponse.json({
+        success: true,
+        mode: 'autonomous_cron',
+        action: 'skipped_duplicate',
+        message: 'Data gempa BMKG sama dengan data terakhir di database. Push notifikasi dilewati (tidak ada spam/loop).',
+        sourceEventId: syncResult.sourceEventId,
+        severity,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     return NextResponse.json({
       success: true,
       mode: 'autonomous_cron',
+      action: 'broadcasted_new_event',
       timestamp: new Date().toISOString(),
       quake: {
         tanggal: quake.Tanggal,
