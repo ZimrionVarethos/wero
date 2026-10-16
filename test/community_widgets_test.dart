@@ -106,6 +106,7 @@ void main() {
         );
 
         expect(find.text('Siti Rahma'), findsNothing);
+        expect(find.text('Jalur Evakuasi Banjir'), findsOneWidget);
         expect(find.text('Tersimpan'), findsOneWidget);
         expect(find.text('Informasi Wilayah'), findsOneWidget);
 
