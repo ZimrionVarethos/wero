@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../models/chat_message.dart';
 import '../../../theme/app_colors.dart';
-import '../../../utils/phone_launcher.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_styles.dart';
 
+import 'chat_action_pills.dart';
 import 'chat_markdown.dart';
 
 /// Chat bubble widget displaying either user query or assistant response.
@@ -61,7 +60,6 @@ class ChatBubble extends StatelessWidget {
         bottom: AppSpacing.md,
       ),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surfaceWhite,
           borderRadius: BorderRadius.circular(AppRadius.card),
@@ -70,90 +68,144 @@ class ChatBubble extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryNavy.withValues(alpha: 0.04),
+              color: AppColors.primaryNavy.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
           ],
         ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Logo AI dan info status menyatu di pojok kiri atas kotak chat
-            Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: Image.asset(
-                    'assets/images/icon.png',
-                    width: 24,
-                    height: 24,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs + 2),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        'Asisten Siaga AI',
-                        style: AppTextStyles.label.copyWith(
-                          color: AppColors.primaryNavy,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      if (message.isOfflineFallback)
-                        _buildOfflineBadge()
-                      else
-                        _buildGeminiBadge(),
-                    ],
-                  ),
-                ),
-              ],
+            // 1. Header dengan warna biru sesuai palet (AppColors.primaryNavy)
+            _buildAssistantHeader(),
+
+            // 2. Garis pembeda / pembatas warna oren sesuai palet logo (AppColors.accentOrange)
+            Container(height: 2.5, color: AppColors.accentOrange),
+
+            // 3. Isi kotak chat (background putih)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ChatMarkdown(data: message.text),
+                  if (message.suggestedActions.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    ChatActionPills(actions: message.suggestedActions),
+                  ],
+                ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            ChatMarkdown(data: message.text),
-            if (message.suggestedActions.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              _buildActions(context),
-            ],
+
+            // 4. Ornamen gunung di bagian bawah kotak chat (seperti login page)
+            _buildMountainOrnament(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAssistantHeader() {
+    return Container(
+      color: AppColors.primaryNavy,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 10,
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.asset(
+              'assets/images/icon.png',
+              width: 22,
+              height: 22,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs + 2),
+          Expanded(
+            child: Row(
+              children: [
+                Text(
+                  'Asisten Siaga AI',
+                  style: AppTextStyles.label.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                if (message.isOfflineFallback)
+                  _buildOfflineBadge()
+                else
+                  _buildGeminiBadge(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildGeminiBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.softBlue,
+        color: AppColors.chartBlue.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        'Online',
-        style: AppTextStyles.caption.copyWith(
-          color: AppColors.chartBlue,
-          fontWeight: FontWeight.w600,
-          fontSize: 10,
+        border: Border.all(
+          color: AppColors.chartBlue.withValues(alpha: 0.6),
+          width: 0.8,
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: const BoxDecoration(
+              color: Color(0xFF4CAF50),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Online',
+            style: AppTextStyles.caption.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildOfflineBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.softGreen,
+        color: AppColors.siaga.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: AppColors.siaga.withValues(alpha: 0.6),
+          width: 0.8,
+        ),
       ),
       child: Text(
         'BNPB Offline',
         style: AppTextStyles.caption.copyWith(
-          color: AppColors.siaga,
+          color: Colors.white,
           fontWeight: FontWeight.w600,
           fontSize: 10,
         ),
@@ -161,78 +213,16 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
-  Widget _buildActions(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.xs,
-      runSpacing: AppSpacing.xs,
-      children: message.suggestedActions.map((action) {
-        return InkWell(
-          onTap: () => _handleAction(context, action),
-          borderRadius: BorderRadius.circular(AppRadius.button),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.softBlue,
-              borderRadius: BorderRadius.circular(AppRadius.button),
-              border: Border.all(
-                color: AppColors.chartBlue.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  action.phoneNumber != null
-                      ? Icons.phone_in_talk
-                      : Icons.arrow_outward,
-                  size: 14,
-                  color: AppColors.chartBlue,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  action.label,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.chartBlue,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+  Widget _buildMountainOrnament() {
+    return SizedBox(
+      height: 48,
+      width: double.infinity,
+      child: Image.asset(
+        'assets/images/ornamen.png',
+        fit: BoxFit.cover,
+        alignment: Alignment.bottomCenter,
+        errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+      ),
     );
-  }
-
-  void _handleAction(BuildContext context, ChatAction action) {
-    if (action.route != null) {
-      context.push(action.route!, extra: action.routeExtra);
-    } else if (action.phoneNumber != null) {
-      showDialog<void>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Panggilan Darurat'),
-          content: Text('Hubungi nomor resmi ${action.phoneNumber}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                PhoneLauncher.launchPhone(
-                  context,
-                  action.phoneNumber!,
-                  label: 'Layanan Darurat',
-                );
-              },
-              child: const Text('Panggil'),
-            ),
-          ],
-        ),
-      );
-    }
   }
 }
